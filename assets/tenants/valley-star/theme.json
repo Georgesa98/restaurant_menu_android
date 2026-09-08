@@ -1,0 +1,21 @@
+{
+  "slug": "valley-star",
+  "name": "Valley Star",
+  "primaryColor": "#e74c3c",
+  "secondaryColor": "#2c3e50",
+  "accentColor": "#f39c12",
+  "backgroundColor": "#fdf5e6",
+  "surfaceColor": "#ffffff",
+  "textColor": "#1a1a2e",
+  "textMuted": "#64748b",
+  "headingFont": "Cairo",
+  "bodyFont": "Inter",
+  "borderRadiusSm": "4px",
+  "borderRadiusMd": "8px",
+  "borderRadiusLg": "16px",
+  "cardStyle": "elevated",
+  "menuLayout": "single",
+  "spacing": "comfortable",
+  "logoUrl": null,
+  "coverUrl": null
+}
