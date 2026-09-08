@@ -424,3 +424,37 @@ Web DB stays external (nixpacks DB untouched); Minio added because Coolify has n
 - **Safety nets:** `since` older than tombstone retention (~30d) → `410 Gone` → one full re-pull
   (no silent resurrection). Weekly/admin-triggered verify via per-table counts+hash → full re-pull
   on mismatch. Push path unchanged (dirty rows, server stamps `updatedAt` on accept).
+- **Shipped 2026-09-08 (web repo):** `isDeleted` on Category/MenuItem/Variant
+  (migration `20260908120000_soft_delete`); list GETs filter deleted; DELETEs tombstone
+  (category cascades flag to items); variant replace tombstones old set; translation
+  upsert/delete touch parent `updatedAt` in-txn; `GET /api/sync/pull` (public, slug/tenantId,
+  `410 stale_cursor`); `POST /api/sync/push` (auth, tenant-scoped, LWW conflicts returned);
+  one-off `prisma/oneoff/backfill_image_urls.sql` for proxy-era relative URLs.
+
+## 19. P1 — read-only kiosk UI on local data (shipped 2026-09-08)
+
+Customer menu renders from drift (demo seed; sync data drops in with P2 untouched).
+
+- **P1-1 DB provider:** `lib/core/db/db_provider.dart` — `Provider<AppDb>` (create, seed demo
+  when `TENANT_SLUG=demo` and tables empty, dispose on scope end).
+- **P1-2 Repository:** `lib/features/menu/data/menu_repository.dart` — drift streams:
+  `watchVisibleCategories(tenantId)`, `watchVisibleItems(categoryId)` (existing DAO methods),
+  plus translations/variants lookup per item, locale-aware name/desc resolution
+  (`translation?.name ?? fallback`), search filter across both locales.
+- **P1-3 State:** `selectedCategoryIdProvider` (auto-select first), `searchQueryProvider`,
+  `selectedVariantIdProvider.family(itemId)`; reuse `localeControllerProvider` for AR/EN.
+- **P1-4 UI (`menu_page.dart` rewrite + widgets):**
+  - Header: tenant name (+ logo file when pinned in P2, baked asset fallback), AR/EN toggle pill.
+  - Category rail: horizontal scroll pills (portrait) / side rail (landscape ≥900dp via LayoutBuilder).
+  - Cards grid: 1 col phone portrait, 2–3 cols tablet landscape; photo 4:3
+    (`CachedNetworkImage`, branded placeholder + error widget — seed has no URLs, so
+    placeholder path is exercised), name[locale], desc[locale], `dietaryTags` chips,
+    single-select variant pills (price updates, `basePrice` hidden when variants exist),
+    price via `NumberFormat('en')` Latin digits (currency symbol TBD per tenant).
+  - Search field (both locales), empty states (no categories / no results / item unavailable),
+    5-tap title → `/admin/login` (kept).
+- **P1-5 Tests:** unit-test `priceLabel` + locale-resolution helpers; widget test for
+  variant-pill price switching. `flutter analyze` clean.
+- **Acceptance:** demo APK, airplane mode, AR default RTL correct, EN toggle re-renders,
+  variant tap changes price, search filters, rotation locked landscape per §1
+  (portrait still lays out sanely).
