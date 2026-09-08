@@ -238,6 +238,14 @@ class AppDb extends _$AppDb {
           ..orderBy([(v) => OrderingTerm.asc(v.sortOrder)]))
         .watch();
   }
+
+  /// Single tenant row by slug (one row per APK). Null until first pull.
+  Stream<Tenant?> watchTenantBySlug(String slug) {
+    return (select(tenants)
+          ..where((t) => t.slug.equals(slug))
+          ..limit(1))
+        .watchSingleOrNull();
+  }
 }
 
 Future<String> _dbFile() async {

@@ -49,7 +49,6 @@ class TenantThemeTokens {
   }
 
   static const TenantThemeTokens defaults = TenantThemeTokens();
-
   final String primaryColor;
   final String secondaryColor;
   final String accentColor;

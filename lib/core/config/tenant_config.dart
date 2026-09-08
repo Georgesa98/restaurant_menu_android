@@ -21,6 +21,12 @@ class TenantConfig {
     name: String.fromEnvironment('TENANT_NAME', defaultValue: 'Demo Restaurant'),
   );
 
+  /// Overridden per build: `--dart-define=MENU_API_URL=https://menu.georgesalebe.me`.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'MENU_API_URL',
+    defaultValue: 'https://menu.georgesalebe.me',
+  );
+
   final String slug;
   final String tenantId;
   final String name;
