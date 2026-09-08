@@ -458,3 +458,20 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
 - **Acceptance:** demo APK, airplane mode, AR default RTL correct, EN toggle re-renders,
   variant tap changes price, search filters, rotation locked landscape per §1
   (portrait still lays out sanely).
+
+## 20. P2 — sync engine + server theme + prefetch (shipped 2026-09-08, untested vs live API)
+
+- **API client** (`core/api`): dio, `X-Tenant-Id` (resolved uuid → baked id → slug),
+  secure-storage session token, 401 → `UnauthorizedException` (force re-login).
+  `MENU_API_URL` baked per build. `SecureStore` abstraction (memory impl for tests).
+- **Engine** (`core/sync/sync_engine.dart`): `push()` dirty parents with full child sets
+  (server stamps `updatedAt`, LWW conflicts applied server-wins) then `pull()`
+  (full/delta by cursor, `410` → one full re-pull, tombstones cascade locally,
+  changed parents replace child sets wholesale). Cursors in `sync_state` (update-preserving).
+- **Theme override** (`core/theme/active_theme.dart`): baked first paint → live `tenants`
+  row → `ThemeData`; web rebrands apply on next pull.
+- **Scheduler** (`core/sync/sync_scheduler.dart`): boot pull + 15-min poll + admin Sync UI
+  with status line (↓counts ↑pushed ⚠conflicts). Post-pull: dish prefetch (cap 300,
+  best-effort) + logo/cover re-pin on URL change.
+- **Tests**: 10 new (mapping, full/delta/410/tombstone/offline pulls) — 20/20 green,
+  analyze clean. Live-API integration pending deploy (other track).
