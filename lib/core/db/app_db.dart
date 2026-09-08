@@ -199,6 +199,45 @@ class AppDb extends _$AppDb {
           ..orderBy([(i) => OrderingTerm.asc(i.displayOrder), (i) => OrderingTerm.asc(i.name)]))
         .get();
   }
+
+  Stream<List<Category>> watchVisibleCategories(String tenantId) {
+    return (select(categories)
+          ..where(
+            (c) =>
+                c.tenantId.equals(tenantId) &
+                c.isActive.equals(true) &
+                c.isDeleted.equals(false),
+          )
+          ..orderBy([(c) => OrderingTerm.asc(c.displayOrder), (c) => OrderingTerm.asc(c.name)]))
+        .watch();
+  }
+
+  Stream<List<MenuItem>> watchVisibleItems(String categoryId) {
+    return (select(menuItems)
+          ..where(
+            (i) =>
+                i.categoryId.equals(categoryId) &
+                i.isAvailable.equals(true) &
+                i.isDeleted.equals(false),
+          )
+          ..orderBy([(i) => OrderingTerm.asc(i.displayOrder), (i) => OrderingTerm.asc(i.name)]))
+        .watch();
+  }
+
+  Stream<List<CategoryTranslation>> watchCategoryTranslations() {
+    return select(categoryTranslations).watch();
+  }
+
+  Stream<List<MenuItemTranslation>> watchMenuItemTranslations() {
+    return select(menuItemTranslations).watch();
+  }
+
+  Stream<List<MenuItemVariant>> watchMenuItemVariants() {
+    return (select(menuItemVariants)
+          ..where((v) => v.isDeleted.equals(false))
+          ..orderBy([(v) => OrderingTerm.asc(v.sortOrder)]))
+        .watch();
+  }
 }
 
 Future<String> _dbFile() async {
