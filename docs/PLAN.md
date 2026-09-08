@@ -475,3 +475,23 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
   best-effort) + logo/cover re-pin on URL change.
 - **Tests**: 10 new (mapping, full/delta/410/tombstone/offline pulls) — 20/20 green,
   analyze clean. Live-API integration pending deploy (other track).
+
+## 21. P3 — admin auth + CRUD + push (shipped 2026-09-08, login vs live API untested)
+
+- **Auth** (`features/admin/auth`): better-auth email/password (defensive token/user
+  parsing — shape confirmed on first live login), cached session w/ offline grace,
+  401 → wipe + force re-login. Guarded `/admin/*` routes (unknown → let through,
+  unauthenticated → `/admin/login`).
+- **Writes** (`features/admin/data/admin_writes.dart`): every write stamps local
+  `updatedAt` + `dirty`; deletes flag (category cascades to items); variant replace
+  tombstones old set; offline uuids + slugify; `resolveWriteTenantId` (resolved →
+  baked → demo).
+- **UI**: admin hub (sections, sync status, locale, logout), categories (reorder via
+  `onReorderItem`, active toggle, delete confirm, AR+EN dialog), items (category
+  filter, availability toggle, reorder, full dialog: AR/EN names+desc, price, tags,
+  photo URL + gallery upload at 1600px/q85, variant rows). Every save → push →
+  snackbar (offline/queued/conflict-kept-newest).
+- **Upload**: `ApiClient.uploadDishPhoto` multipart → public S3 URL (needs
+  `image_picker`, installed).
+- **Tests**: 7 write-layer tests (slugify, dirty-marking, cascade delete, reorder,
+  variant replace) — 27/27 green, analyze clean. Live login/push pending deploy.
