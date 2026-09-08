@@ -246,6 +246,26 @@ class AppDb extends _$AppDb {
           ..limit(1))
         .watchSingleOrNull();
   }
+
+  /// Admin: all non-deleted categories incl. inactive, display order.
+  Stream<List<Category>> watchAllCategories(String tenantId) {
+    return (select(categories)
+          ..where(
+            (c) => c.tenantId.equals(tenantId) & c.isDeleted.equals(false),
+          )
+          ..orderBy([(c) => OrderingTerm.asc(c.displayOrder), (c) => OrderingTerm.asc(c.name)]))
+        .watch();
+  }
+
+  /// Admin: all non-deleted items of a category incl. unavailable.
+  Stream<List<MenuItem>> watchAllItems(String categoryId) {
+    return (select(menuItems)
+          ..where(
+            (i) => i.categoryId.equals(categoryId) & i.isDeleted.equals(false),
+          )
+          ..orderBy([(i) => OrderingTerm.asc(i.displayOrder), (i) => OrderingTerm.asc(i.name)]))
+        .watch();
+  }
 }
 
 Future<String> _dbFile() async {
