@@ -138,4 +138,23 @@ class ApiClient {
   Future<Response<dynamic>> post(String path, {Object? body}) {
     return _dio.post(path, data: body);
   }
+
+  /// Multipart dish-photo upload (`POST /api/upload`, field `file`).
+  /// Returns the public S3 URL. Throws [UnauthorizedException] on 401.
+  Future<String> uploadDishPhoto(String filePath, String filename) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: filename),
+    });
+    try {
+      final res = await _dio.post('/api/upload', data: form);
+      final url = (res.data as Map<String, dynamic>?)?['url'] as String?;
+      if (url == null || url.isEmpty) throw const FormatException('bad upload response');
+      return url;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401 || e.error is UnauthorizedException) {
+        throw const UnauthorizedException();
+      }
+      rethrow;
+    }
+  }
 }
