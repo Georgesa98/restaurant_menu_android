@@ -27,6 +27,7 @@ dependencies:
   uuid: ^4.6.0
   wakelock_plus: ^1.8.0
   workmanager: ^0.10.10
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
