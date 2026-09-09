@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/tenant_config.dart';
 import '../../../core/db/app_db.dart';
 import '../../../core/db/db_provider.dart';
+
+/// Tenant id shared by menu providers (demo seed id; resolved uuid in P2).
+String currentMenuTenantId() {
+  final baked = TenantConfig.current.tenantId;
+  if (baked.isNotEmpty) return baked;
+  return TenantConfig.current.slug == 'demo' ? 'demo' : '';
+}
 
 /// Streams over the local drift cache (demo seed in P1, server data in P2).
 class MenuRepository {

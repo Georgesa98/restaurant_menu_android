@@ -2,108 +2,183 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/web_palette.dart';
+import '../category_icons.dart';
 import '../menu_format.dart';
 import '../menu_providers.dart';
+import '../order_state.dart';
+import 'qty_stepper.dart';
 
-/// One dish card: 4:3 photo, locale name/desc, dietary chips,
-/// single-select variant pills with live price.
+/// Web `.menu-card` anatomy: 4:3 photo on cream wash, 12/14/14 body, name +
+/// price row, 2-line desc, variant chips with prices, tag pills, stepper row.
 class MenuItemCard extends ConsumerWidget {
-  const MenuItemCard({super.key, required this.view});
+  const MenuItemCard({super.key, required this.view, required this.categorySlug});
 
   final MenuItemView view;
+  final String categorySlug;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final sel = ref.watch(variantSelectionProvider)[view.item.id] ?? -1;
-    final price = priceLabel(
-      basePrice: view.item.basePrice,
-      variants: [for (final v in view.variants) (price: v.price)],
-      selectedIndex: sel,
+    final locale = Localizations.localeOf(context).languageCode;
+    final quantities = ref.watch(quantitiesProvider);
+    final selById = ref.watch(variantSelectionProvider);
+    final sel = selById[view.item.id] ?? -1;
+    final hasVariants = view.variants.isNotEmpty;
+    final selectedVariant =
+        hasVariants && sel >= 0 && sel < view.variants.length ? view.variants[sel] : null;
+    final qtyKey = orderKey(
+      view.item.id,
+      hasVariants ? (selectedVariant?.id ?? view.variants.first.id) : null,
     );
+    final qty = quantities[qtyKey] ?? 0;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border.all(color: WebPalette.hairline, width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AspectRatio(
             aspectRatio: 4 / 3,
-            child: view.item.imageUrl?.isNotEmpty == true
-                ? CachedNetworkImage(
-                    imageUrl: view.item.imageUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => const _PhotoPlaceholder(),
-                    errorWidget: (_, _, _) => const _PhotoPlaceholder(),
-                  )
-                : const _PhotoPlaceholder(),
+            child: Container(
+              color: WebPalette.imageWash,
+              child: view.item.imageUrl?.isNotEmpty == true
+                  ? CachedNetworkImage(
+                      imageUrl: view.item.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => _PlaceholderIcon(slug: categorySlug),
+                      errorWidget: (_, _, _) => _PlaceholderIcon(slug: categorySlug),
+                    )
+                  : _PlaceholderIcon(slug: categorySlug),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        view.name,
-                        style: theme.textTheme.titleLarge,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          view.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            height: 1.25,
+                            color: theme.colorScheme.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
+                      Text(
+                        displayPrice(
+                          basePrice: view.item.basePrice,
+                          variantPrices: [
+                            for (final v in view.variants) v.price,
+                          ],
+                          selectedIndex: sel,
+                          locale: locale,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: WebPalette.accentText,
+                        ),
+                        textDirection: TextDirection.ltr,
+                      ),
+                    ],
+                  ),
+                  if (view.description != null) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      price,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+                      view.description!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.45,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
-                      textDirection: TextDirection.ltr,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-                if (view.description != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    view.description!,
-                    style: theme.textTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                if (view.variants.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      for (var i = 0; i < view.variants.length; i++)
-                        ChoiceChip(
-                          label: Text(
-                            Localizations.localeOf(context).languageCode == 'ar'
+                  if (hasVariants) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (var i = 0; i < view.variants.length; i++)
+                          _VariantChip(
+                            label: locale == 'ar'
                                 ? view.variants[i].label
                                 : (view.variants[i].labelEn.isNotEmpty
                                     ? view.variants[i].labelEn
                                     : view.variants[i].label),
+                            price: view.variants[i].price,
+                            locale: locale,
+                            selected: sel == i ||
+                                (sel == -1 && i == 0 && qty == 0),
+                            hasQty: (quantities[orderKey(view.item.id, view.variants[i].id)] ?? 0) > 0,
+                            onTap: () => ref
+                                .read(variantSelectionProvider.notifier)
+                                .select(view.item.id, i),
                           ),
-                          selected: sel == i,
-                          onSelected: (_) => ref
-                              .read(variantSelectionProvider.notifier)
-                              .select(view.item.id, i),
-                        ),
-                    ],
+                      ],
+                    ),
+                  ],
+                  if (view.tags.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final t in view.tags)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.secondary,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              t.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.08 * 10,
+                                color: theme.scaffoldBackgroundColor,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Align(
+                      alignment: Directionality.of(context) == TextDirection.rtl
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: QtyStepper(
+                        qty: qty,
+                        qtyKey: qtyKey,
+                        addLabel: locale == 'ar' ? 'أضف' : 'Add',
+                      ),
+                    ),
                   ),
                 ],
-                if (view.tags.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    children: [for (final t in view.tags) Chip(label: Text(t))],
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ],
@@ -112,18 +187,69 @@ class MenuItemCard extends ConsumerWidget {
   }
 }
 
-class _PhotoPlaceholder extends StatelessWidget {
-  const _PhotoPlaceholder();
+class _PlaceholderIcon extends StatelessWidget {
+  const _PlaceholderIcon({required this.slug});
+  final String slug;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      color: scheme.surfaceContainerHighest,
+    return Center(
       child: Icon(
-        Icons.restaurant,
-        size: 48,
-        color: scheme.onSurface.withValues(alpha: 0.4),
+        categoryIconForSlug(slug),
+        size: 36,
+        color: Theme.of(context).colorScheme.tertiary,
+      ),
+    );
+  }
+}
+
+class _VariantChip extends StatelessWidget {
+  const _VariantChip({
+    required this.label,
+    required this.price,
+    required this.locale,
+    required this.selected,
+    required this.hasQty,
+    required this.onTap,
+  });
+
+  final String label;
+  final double price;
+  final String locale;
+  final bool selected;
+  final bool hasQty;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final priceStr = priceWithCurrency(price, locale);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.tertiary : Colors.transparent,
+          border: Border.all(
+            color: selected || hasQty
+                ? theme.colorScheme.tertiary
+                : WebPalette.stepperBorder,
+            width: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          '$label · $priceStr',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: selected
+                ? Colors.white
+                : hasQty
+                    ? theme.colorScheme.tertiary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
       ),
     );
   }

@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config/tenant_config.dart';
 import '../../core/db/app_db.dart';
 import '../../core/db/db_provider.dart';
 import '../../core/i18n/locale_controller.dart';
 import 'menu_format.dart';
-import 'data/menu_repository.dart';
+import 'data/menu_repository.dart'
+    show MenuRepository, menuRepositoryProvider, currentMenuTenantId;
 
 class CategoryView {
   const CategoryView({required this.category, required this.name});
@@ -29,20 +29,13 @@ class MenuItemView {
       item.dietaryTagsCsv.split('|').where((t) => t.isNotEmpty).toList();
 }
 
-/// P1: demo tenant id; P2 resolves the real uuid on first pull.
-String _tenantId() {
-  final baked = TenantConfig.current.tenantId;
-  if (baked.isNotEmpty) return baked;
-  return TenantConfig.current.slug == 'demo' ? 'demo' : '';
-}
-
 Stream<T> _ready<T>(Ref ref, Stream<T> Function(MenuRepository) pick) async* {
   await ref.watch(dbReadyProvider.future);
   yield* pick(ref.watch(menuRepositoryProvider));
 }
 
 final _categoriesStreamProvider = StreamProvider<List<Category>>(
-  (ref) => _ready(ref, (r) => r.watchCategories(_tenantId())),
+  (ref) => _ready(ref, (r) => r.watchCategories(currentMenuTenantId())),
 );
 final _categoryTranslationsStreamProvider =
     StreamProvider<List<CategoryTranslation>>(
@@ -142,12 +135,10 @@ class _Selection extends Notifier<String?> {
 final selectedCategoryIdProvider =
     NotifierProvider<_Selection, String?>(_Selection.new);
 
-final effectiveCategoryIdProvider = Provider<String?>((ref) {
-  final selected = ref.watch(selectedCategoryIdProvider);
-  if (selected != null) return selected;
-  final cats = ref.watch(categoryViewsProvider);
-  return cats.isEmpty ? null : cats.first.category.id;
-});
+/// Web parity: null selection = "All" (every section stacked).
+/// Tapping a tab filters to one section; "All" tab clears back to null.
+final showAllProvider =
+    Provider<bool>((ref) => ref.watch(selectedCategoryIdProvider) == null);
 
 class _Search extends Notifier<String> {
   @override
