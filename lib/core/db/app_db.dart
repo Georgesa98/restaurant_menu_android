@@ -239,6 +239,20 @@ class AppDb extends _$AppDb {
         .watch();
   }
 
+  /// Attract loop: first N available items of the tenant.
+  Future<List<MenuItem>> topItemsWithImages(String tenantId, int limit) {
+    return (select(menuItems)
+          ..where(
+            (i) =>
+                i.tenantId.equals(tenantId) &
+                i.isAvailable.equals(true) &
+                i.isDeleted.equals(false),
+          )
+          ..orderBy([(i) => OrderingTerm.asc(i.displayOrder)])
+          ..limit(limit))
+        .get();
+  }
+
   /// Single tenant row by slug (one row per APK). Null until first pull.
   Stream<Tenant?> watchTenantBySlug(String slug) {
     return (select(tenants)

@@ -29,6 +29,15 @@ class ImagePrefetch {
     return await f.exists() ? f : null;
   }
 
+  /// First existing pinned brand file (`logo`/`cover`, any extension).
+  Future<File?> pinnedBrand(String base) async {
+    for (final e in ['png', 'jpg', 'jpeg', 'webp']) {
+      final f = File(p.join((await _dir).path, '$base.$e'));
+      if (await f.exists()) return f;
+    }
+    return null;
+  }
+
   /// Downloads all dish [urls] into the cache (best-effort, capped).
   Future<int> prefetchDishes(Iterable<String> urls, {int cap = 300}) async {
     var done = 0;
