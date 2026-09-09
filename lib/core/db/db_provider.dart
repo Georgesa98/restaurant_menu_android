@@ -2,11 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/tenant_config.dart';
 import 'app_db.dart';
-import 'seed_demo.dart';
+import 'seed_tenant.dart';
 
-/// Single [AppDb] for the app lifetime. Seeds demo content on first run when
-/// the baked tenant is `demo` and the database is empty (P1 local-data mode;
-/// P2 sync replaces the seed with server data).
+/// Single [AppDb] for the app lifetime. Seeds the demo tenant from the bundled
+/// valley-star dataset on first run (PLAN §24); other tenants start empty and
+/// fill on first pull (which replaces seed rows, §18).
 final appDbProvider = Provider<AppDb>((ref) {
   final db = AppDb();
   ref.onDispose(db.close);
@@ -21,6 +21,12 @@ final dbReadyProvider = FutureProvider<void>((ref) async {
         ..where((t) => t.id.equals('demo')))
       .getSingleOrNull();
   if (existing == null) {
-    await seedDemo(db);
+    await seedTenantFromAsset(
+      db,
+      assetPath: 'assets/seed/demo.json',
+      tenantId: 'demo',
+      slug: 'demo',
+      name: TenantConfig.current.name,
+    );
   }
 });

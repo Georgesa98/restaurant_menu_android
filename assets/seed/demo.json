@@ -1,0 +1,2416 @@
+{
+  "source": "restaurant-menu/prisma/seed.ts (valley-star dataset, demo tenant)",
+  "tenant": {
+    "name": "Valley Star",
+    "primaryColor": "#2E3B42",
+    "secondaryColor": "#6B7052",
+    "accentColor": "#B98F4E",
+    "backgroundColor": "#F6F3ED",
+    "surfaceColor": "#FFFFFF",
+    "textColor": "#2E3B42",
+    "textMuted": "#8A8578",
+    "headingFont": "'Playfair Display', 'Amiri', Georgia, serif",
+    "bodyFont": "'Jost', 'Noto Kufi Arabic', system-ui, sans-serif",
+    "borderRadiusSm": "6px",
+    "borderRadiusMd": "10px",
+    "borderRadiusLg": "12px",
+    "shadow": "none",
+    "cardStyle": "bordered",
+    "menuLayout": "auto-fit",
+    "spacing": "comfortable",
+    "description": "Levantine & Western fusion",
+    "address": "",
+    "phone": "",
+    "instagram": "",
+    "defaultLocale": "ar",
+    "availableLocales": [
+      "ar",
+      "en"
+    ]
+  },
+  "categories": [
+    {
+      "slug": "hot-drinks",
+      "nameAr": "مشروبات ساخنة",
+      "nameEn": "Hot Drinks",
+      "descriptionAr": "مشروباتنا الساخنة الطازجة لبداية يومك",
+      "descriptionEn": "Fresh hot beverages to start your day",
+      "order": 1
+    },
+    {
+      "slug": "cold-drinks",
+      "nameAr": "مشروبات باردة",
+      "nameEn": "Cold Drinks",
+      "descriptionAr": "مشروبات باردة منعشة وعصائر طبيعية",
+      "descriptionEn": "Refreshing cold drinks and fresh juices",
+      "order": 2
+    },
+    {
+      "slug": "western",
+      "nameAr": "غربي",
+      "nameEn": "Western",
+      "descriptionAr": "أطباق غربية بنكهة عصرية",
+      "descriptionEn": "Modern Western dishes with a twist",
+      "order": 3
+    },
+    {
+      "slug": "crepes",
+      "nameAr": "كريبات",
+      "nameEn": "Crepes",
+      "descriptionAr": "كريبات شهية حلوة وم salty",
+      "descriptionEn": "Delicious sweet and savoury crepes",
+      "order": 4
+    },
+    {
+      "slug": "oriental",
+      "nameAr": "شرقي",
+      "nameEn": "Oriental",
+      "descriptionAr": "أشهى المأكولات الشرقية والمشاوي",
+      "descriptionEn": "Finest Levantine cuisine and grilled meats",
+      "order": 5
+    },
+    {
+      "slug": "alcoholic-drinks",
+      "nameAr": "مشروبات كحولية",
+      "nameEn": "Alcoholic Drinks",
+      "descriptionAr": "مشروبات كحولية متنوعة",
+      "descriptionEn": "Selected alcoholic beverages",
+      "order": 6
+    },
+    {
+      "slug": "pizza",
+      "nameAr": "بيتزا",
+      "nameEn": "Pizza",
+      "descriptionAr": "بيتزا طازجة على أصولها",
+      "descriptionEn": "Authentic oven-baked pizzas",
+      "order": 7
+    },
+    {
+      "slug": "barista",
+      "nameAr": "باريستا",
+      "nameEn": "Barista",
+      "descriptionAr": "مشروبات باريستا وكوكتيلات مميزة",
+      "descriptionEn": "Speciality barista drinks and cocktails",
+      "order": 8
+    },
+    {
+      "slug": "cold-appetizers",
+      "nameAr": "مقبلات باردة",
+      "nameEn": "Cold Appetizers",
+      "descriptionAr": "مقبلات باردة تقليدية بنكهة أصيلة",
+      "descriptionEn": "Traditional cold mezza with authentic flavours",
+      "order": 9
+    },
+    {
+      "slug": "hot-appetizers",
+      "nameAr": "مقبلات ساخنة",
+      "nameEn": "Hot Appetizers",
+      "descriptionAr": "مقبلات ساخنة متنوعة",
+      "descriptionEn": "A variety of hot starters",
+      "order": 10
+    },
+    {
+      "slug": "salads",
+      "nameAr": "سلطات",
+      "nameEn": "Salads",
+      "descriptionAr": "سلطات طازجة وصحية",
+      "descriptionEn": "Fresh and healthy salads",
+      "order": 11
+    },
+    {
+      "slug": "pasta",
+      "nameAr": "باستا",
+      "nameEn": "Pasta",
+      "descriptionAr": "باستا مطهوة بحب",
+      "descriptionEn": "Pasta made with love",
+      "order": 12
+    },
+    {
+      "slug": "hookah",
+      "nameAr": "اراكيل",
+      "nameEn": "Hookah",
+      "descriptionAr": "أجود أنواع الأركيلة",
+      "descriptionEn": "Premium hookah selection",
+      "order": 14
+    }
+  ],
+  "items": [
+    {
+      "categorySlug": "hot-drinks",
+      "name": "قهوة",
+      "nameEn": "Coffee",
+      "description": "",
+      "basePrice": 150,
+      "order": 1,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "عادي",
+          "labelEn": "Regular",
+          "price": 150
+        },
+        {
+          "label": "دبل",
+          "labelEn": "Double",
+          "price": 220
+        },
+        {
+          "label": "ركوة",
+          "labelEn": "Pot",
+          "price": 440
+        }
+      ]
+    },
+    {
+      "categorySlug": "hot-drinks",
+      "name": "شاي",
+      "nameEn": "Tea",
+      "description": "",
+      "basePrice": 145,
+      "order": 2,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "كأس",
+          "labelEn": "Cup",
+          "price": 145
+        },
+        {
+          "label": "مع قرفة",
+          "labelEn": "With Cinnamon",
+          "price": 165
+        },
+        {
+          "label": "ابريق",
+          "labelEn": "Pot",
+          "price": 330
+        }
+      ]
+    },
+    {
+      "categorySlug": "hot-drinks",
+      "name": "زهورات",
+      "nameEn": "Zhourat",
+      "description": "",
+      "basePrice": 145,
+      "order": 3,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "كأس",
+          "labelEn": "Cup",
+          "price": 145
+        },
+        {
+          "label": "ابريق",
+          "labelEn": "Pot",
+          "price": 330
+        }
+      ]
+    },
+    {
+      "categorySlug": "hot-drinks",
+      "name": "كمون و ليمون",
+      "nameEn": "Cumin & Lemon",
+      "description": "",
+      "basePrice": 145,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-drinks",
+      "name": "هوت شوكليت",
+      "nameEn": "Hot Chocolat",
+      "description": "",
+      "basePrice": 175,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "مياه معدني",
+      "nameEn": "Water",
+      "description": "",
+      "basePrice": 135,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "كولا",
+      "nameEn": "Cola",
+      "description": "",
+      "basePrice": 200,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "سفن اب",
+      "nameEn": "Seven Up",
+      "description": "",
+      "basePrice": 200,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "سفن غراندين",
+      "nameEn": "Seven Up Grenadine",
+      "description": "",
+      "basePrice": 200,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "عصير",
+      "nameEn": "Juice",
+      "description": "",
+      "basePrice": 220,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "عصير فريش",
+      "nameEn": "Fresh Juice",
+      "description": "",
+      "basePrice": 280,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "عصير برتقال فريش",
+      "nameEn": "Fresh Orange Juice",
+      "description": "",
+      "basePrice": 280,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "ابريق عصير",
+      "nameEn": "Jar of juice",
+      "description": "",
+      "basePrice": 400,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "بوظة مشكلة",
+      "nameEn": "Versatile Ice Cream",
+      "description": "",
+      "basePrice": 385,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "بولو",
+      "nameEn": "Polo",
+      "description": "",
+      "basePrice": 220,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "ريد بول",
+      "nameEn": "RedBull",
+      "description": "",
+      "basePrice": 330,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "صودا",
+      "nameEn": "Soda",
+      "description": "",
+      "basePrice": 280,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-drinks",
+      "name": "اينرجي",
+      "nameEn": "Energy",
+      "description": "",
+      "basePrice": 250,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "سوبريم",
+      "nameEn": "Supreme",
+      "description": "",
+      "basePrice": 750,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "ستروغانوف دجاج",
+      "nameEn": "Chicken Stroganoff",
+      "description": "",
+      "basePrice": 800,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "بيف سترغانوف",
+      "nameEn": "Beef Stroganoff",
+      "description": "",
+      "basePrice": 1200,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "كريسبي",
+      "nameEn": "Crispy",
+      "description": "",
+      "basePrice": 165,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "سبايسي",
+      "nameEn": "Spicy",
+      "description": "",
+      "basePrice": 750,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "كرانشي",
+      "nameEn": "Crunchy",
+      "description": "",
+      "basePrice": 750,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "كوردون بلو",
+      "nameEn": "Cordon Blu",
+      "description": "",
+      "basePrice": 800,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "كوردون بلو جامبو",
+      "nameEn": "Cordon Jumbo",
+      "description": "",
+      "basePrice": 850,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "تشيكن الاكيف",
+      "nameEn": "Chicken a la Kiev",
+      "description": "",
+      "basePrice": 800,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "فاهيتا دجاج",
+      "nameEn": "Chicken Fahita",
+      "description": "",
+      "basePrice": 800,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "فيلاديلفيا",
+      "nameEn": "Philadelphia",
+      "description": "",
+      "basePrice": 1200,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "مكسيكانو",
+      "nameEn": "Mexicano",
+      "description": "",
+      "basePrice": 750,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "تشكن نغت",
+      "nameEn": "Chicken Nugget",
+      "description": "",
+      "basePrice": 750,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "وجبة فالي ستار",
+      "nameEn": "Valley Star Meal",
+      "description": "",
+      "basePrice": 850,
+      "order": 14,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "صحن ميكس",
+      "nameEn": "Mix Plate",
+      "description": "",
+      "basePrice": 2000,
+      "order": 15,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "سكالوب",
+      "nameEn": "Escalope",
+      "description": "",
+      "basePrice": 700,
+      "order": 16,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "عادي",
+          "labelEn": "Plain",
+          "price": 700
+        },
+        {
+          "label": "صوص",
+          "labelEn": "Sauce",
+          "price": 800
+        },
+        {
+          "label": "ميلانيز",
+          "labelEn": "Milanaise",
+          "price": 750
+        }
+      ]
+    },
+    {
+      "categorySlug": "western",
+      "name": "شرحات دجاج",
+      "nameEn": "Chicken Cutlets",
+      "description": "",
+      "basePrice": 750,
+      "order": 17,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "مقلية",
+          "labelEn": "Fried",
+          "price": 750
+        },
+        {
+          "label": "مطفاية",
+          "labelEn": "Sauteed",
+          "price": 800
+        }
+      ]
+    },
+    {
+      "categorySlug": "western",
+      "name": "شرحات لحم صوص",
+      "nameEn": "Sauce Beef Cutlets",
+      "description": "",
+      "basePrice": 1200,
+      "order": 18,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "تشيكن داينمت",
+      "nameEn": "Chicken Dynamite",
+      "description": "",
+      "basePrice": 850,
+      "order": 19,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "ستيك بوافر",
+      "nameEn": "Poivre Steak",
+      "description": "",
+      "basePrice": 1200,
+      "order": 20,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "ستيك انتر كوت",
+      "nameEn": "Entercote Steak",
+      "description": "",
+      "basePrice": 1200,
+      "order": 21,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "ستيك صوص مشروم",
+      "nameEn": "Mushroom Sauce Steak",
+      "description": "",
+      "basePrice": 1200,
+      "order": 22,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "شاورما",
+      "nameEn": "Shawarma",
+      "description": "",
+      "basePrice": 700,
+      "order": 23,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "هبرغر جاج",
+      "nameEn": "Chicken Burger",
+      "description": "",
+      "basePrice": 550,
+      "order": 24,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "western",
+      "name": "همبرغر لحمة",
+      "nameEn": "Beef Burger",
+      "description": "",
+      "basePrice": 660,
+      "order": 25,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "crepes",
+      "name": "كريب شوكولا",
+      "nameEn": "Chocolate Crepe",
+      "description": "",
+      "basePrice": 385,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "crepes",
+      "name": "كريب موز",
+      "nameEn": "Banana Crepe",
+      "description": "",
+      "basePrice": 490,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "crepes",
+      "name": "كريب فواكه",
+      "nameEn": "Fruit Crepe",
+      "description": "",
+      "basePrice": 490,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "crepes",
+      "name": "كريب مكسرات",
+      "nameEn": "Nuts Crepe",
+      "description": "",
+      "basePrice": 550,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "crepes",
+      "name": "كريب بوظة",
+      "nameEn": "Ice Cream Crepe",
+      "description": "",
+      "basePrice": 550,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "معجوقة",
+      "nameEn": "Maajouka",
+      "description": "",
+      "basePrice": 1700,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "فخاد دجاج تندوري",
+      "nameEn": "Tandoori Chicken Thighs",
+      "description": "",
+      "basePrice": 820,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "فروج مشوي",
+      "nameEn": "Grilled Chicken",
+      "description": "",
+      "basePrice": 1800,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "فروج بالصينية",
+      "nameEn": "Grilled Chicken In A Tray",
+      "description": "",
+      "basePrice": 2600,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "طوشكا",
+      "nameEn": "Toshka",
+      "description": "",
+      "basePrice": 1000,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "ماريا",
+      "nameEn": "Maria",
+      "description": "",
+      "basePrice": 1000,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "جبنة كردية",
+      "nameEn": "Kurdish Cheese",
+      "description": "",
+      "basePrice": 500,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "سجق بالعجين",
+      "nameEn": "Sausage in Dough",
+      "description": "",
+      "basePrice": 1320,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "كبة عالسيخ",
+      "nameEn": "Kibbeh On Skewer",
+      "description": "",
+      "basePrice": 880,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "كباب مشوي",
+      "nameEn": "Grilled Kebab",
+      "description": "",
+      "basePrice": 1040,
+      "order": 10,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "وجبة",
+          "labelEn": "Meal",
+          "price": 1040
+        },
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 1900
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 3700
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "كباب ازمرلي",
+      "nameEn": "Kebab Izmirli",
+      "description": "",
+      "basePrice": 2000,
+      "order": 11,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 2000
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 4000
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "شقف",
+      "nameEn": "Shekaf",
+      "description": "",
+      "basePrice": 1050,
+      "order": 12,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "وجبة",
+          "labelEn": "Meal",
+          "price": 1050
+        },
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 1950
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 3900
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "مشاوي مشكل",
+      "nameEn": "Mixed Grills",
+      "description": "",
+      "basePrice": 990,
+      "order": 13,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "وجبة",
+          "labelEn": "Meal",
+          "price": 990
+        },
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 1650
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 3300
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "شيش طاووق",
+      "nameEn": "Shish Tawook",
+      "description": "",
+      "basePrice": 700,
+      "order": 14,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "وجبة",
+          "labelEn": "Meal",
+          "price": 700
+        },
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 850
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 1700
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "شيش طاووق بالفخار",
+      "nameEn": "Shish Tawook in Pot",
+      "description": "",
+      "basePrice": 850,
+      "order": 15,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "وجبة",
+          "labelEn": "Meal",
+          "price": 850
+        },
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 950
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 1900
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "كافتا مع خضار بالصينية",
+      "nameEn": "Kofta With Veggies",
+      "description": "",
+      "basePrice": 4000,
+      "order": 16,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "كافتا مع طحينة بالصينية",
+      "nameEn": "Kofta With Tahini",
+      "description": "",
+      "basePrice": 4600,
+      "order": 17,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "صحن ارز",
+      "nameEn": "Rice Plate",
+      "description": "",
+      "basePrice": 440,
+      "order": 18,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "جوانح",
+      "nameEn": "Wings",
+      "description": "",
+      "basePrice": 600,
+      "order": 19,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "نصف كيلو",
+          "labelEn": "1/2 Kg",
+          "price": 600
+        },
+        {
+          "label": "كيلو",
+          "labelEn": "1 Kg",
+          "price": 1200
+        }
+      ]
+    },
+    {
+      "categorySlug": "oriental",
+      "name": "وجبة كباب خشخاش",
+      "nameEn": "Kebab Kheshkhash Meal",
+      "description": "",
+      "basePrice": 3800,
+      "order": 20,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة المازا",
+      "nameEn": "Almaza Beer",
+      "description": "",
+      "basePrice": 500,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة بيروت",
+      "nameEn": "Beirut Beer",
+      "description": "",
+      "basePrice": 420,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة كورونا",
+      "nameEn": "Corona Beer",
+      "description": "",
+      "basePrice": 600,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة المازا مكسيكي",
+      "nameEn": "Mexican Almaza Beer",
+      "description": "",
+      "basePrice": 550,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة بيروت مكسيكي",
+      "nameEn": "Mexican Beirut Beer",
+      "description": "",
+      "basePrice": 450,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "بيرة كورونا مكسيكي",
+      "nameEn": "Mexican Corona Beer",
+      "description": "",
+      "basePrice": 630,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "عرق",
+      "nameEn": "Arak",
+      "description": "",
+      "basePrice": 130,
+      "order": 7,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "كأس",
+          "labelEn": "Glass",
+          "price": 130
+        },
+        {
+          "label": "ربعية",
+          "labelEn": "1/4 Liter",
+          "price": 275
+        },
+        {
+          "label": "نصية",
+          "labelEn": "1/2 Liter",
+          "price": 550
+        },
+        {
+          "label": "ليتر",
+          "labelEn": "1 Liter",
+          "price": 1100
+        },
+        {
+          "label": "سوداية",
+          "labelEn": "Soudaya",
+          "price": 770
+        }
+      ]
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "فودكا",
+      "nameEn": "Vodka",
+      "description": "",
+      "basePrice": 330,
+      "order": 8,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "كأس",
+          "labelEn": "Glass",
+          "price": 330
+        },
+        {
+          "label": "مع عصير",
+          "labelEn": "With Juice",
+          "price": 330
+        },
+        {
+          "label": "مع اينرجي",
+          "labelEn": "With Energy",
+          "price": 420
+        },
+        {
+          "label": "مع ريد بول",
+          "labelEn": "With Redbull",
+          "price": 500
+        },
+        {
+          "label": "مع سفن و ليمون",
+          "labelEn": "With Seven & Lemon",
+          "price": 390
+        }
+      ]
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "ويسكي",
+      "nameEn": "Whiskey",
+      "description": "",
+      "basePrice": 440,
+      "order": 9,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "ريد",
+          "labelEn": "Red",
+          "price": 440
+        },
+        {
+          "label": "بلاك",
+          "labelEn": "Black",
+          "price": 550
+        },
+        {
+          "label": "شيفاز",
+          "labelEn": "Chivas",
+          "price": 850
+        }
+      ]
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "نبيذ",
+      "nameEn": "Wine",
+      "description": "",
+      "basePrice": 220,
+      "order": 10,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "كأس",
+          "labelEn": "Glass",
+          "price": 220
+        },
+        {
+          "label": "ليتر سلاف",
+          "labelEn": "Liter Solaf",
+          "price": 1200
+        },
+        {
+          "label": "ليتر كفريا",
+          "labelEn": "Liter Kifryah",
+          "price": 830
+        },
+        {
+          "label": "ليتر",
+          "labelEn": "Liter",
+          "price": 2600
+        }
+      ]
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "جمايكا كحول",
+      "nameEn": "Alcoholic Jamaica",
+      "description": "",
+      "basePrice": 350,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "كوكتيل كحولي",
+      "nameEn": "Alcoholic Cocktail",
+      "description": "",
+      "basePrice": 385,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "alcoholic-drinks",
+      "name": "تاكيلا",
+      "nameEn": "Tequila",
+      "description": "",
+      "basePrice": 275,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا فالي ستار",
+      "nameEn": "Valley Star Pizza",
+      "description": "",
+      "basePrice": 1100,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا سجق",
+      "nameEn": "Sausage Pizza",
+      "description": "",
+      "basePrice": 940,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا مارغريتا",
+      "nameEn": "Margerita Pizza",
+      "description": "",
+      "basePrice": 770,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا الفصول الأربعة",
+      "nameEn": "Four Seasons Pizza",
+      "description": "",
+      "basePrice": 880,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا سلامة",
+      "nameEn": "Salami Pizza",
+      "description": "",
+      "basePrice": 940,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا فطر",
+      "nameEn": "Mushroom Pizza",
+      "description": "",
+      "basePrice": 830,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا بيبيروني",
+      "nameEn": "Pepperoni Pizza",
+      "description": "",
+      "basePrice": 990,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا خضار",
+      "nameEn": "Veggies Pizza",
+      "description": "",
+      "basePrice": 880,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا طلياني",
+      "nameEn": "Mortadella Pizza",
+      "description": "",
+      "basePrice": 940,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا طلياني و خضار",
+      "nameEn": "Mortadella Pizza With Veggies",
+      "description": "",
+      "basePrice": 990,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا لحومات",
+      "nameEn": "Meats Pizza",
+      "description": "",
+      "basePrice": 1050,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pizza",
+      "name": "بيتزا لحومات و خضار",
+      "nameEn": "Meats Pizza With Veggies",
+      "description": "",
+      "basePrice": 1040,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "كابوتشينو",
+      "nameEn": "Cappuccino",
+      "description": "",
+      "basePrice": 165,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ميلو",
+      "nameEn": "Milo",
+      "description": "",
+      "basePrice": 165,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ميلو بحليب",
+      "nameEn": "Milo With Milk",
+      "description": "",
+      "basePrice": 220,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "نسكافيه 3 ب1",
+      "nameEn": "Nescafe 3 in 1",
+      "description": "",
+      "basePrice": 165,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "نسكافيه بالحليب",
+      "nameEn": "Nescafe With Milk",
+      "description": "",
+      "basePrice": 220,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "نسكافيه بلاك",
+      "nameEn": "Nescafe Black",
+      "description": "",
+      "basePrice": 120,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "جمايكا بدون كحول",
+      "nameEn": "Virgin Jamaica",
+      "description": "",
+      "basePrice": 300,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ايس كافيه",
+      "nameEn": "Ice Coffee",
+      "description": "",
+      "basePrice": 190,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ايس تي",
+      "nameEn": "Ice Tea",
+      "description": "",
+      "basePrice": 180,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "كوكتيل حليب و شوكولا",
+      "nameEn": "Milk & Chocolate Cocktail",
+      "description": "",
+      "basePrice": 385,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "كوكتيل حليب و فريز",
+      "nameEn": "Milk & Strawberry Cocktail",
+      "description": "",
+      "basePrice": 385,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "كوكتيل حليب و موز",
+      "nameEn": "Milk & Banana Cocktail",
+      "description": "",
+      "basePrice": 385,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "كوكتيل فواكه",
+      "nameEn": "Fruit Cocktail",
+      "description": "",
+      "basePrice": 440,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ميلك شيك شوكولا",
+      "nameEn": "Chocolate Milkshake",
+      "description": "",
+      "basePrice": 385,
+      "order": 14,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ميلك شيك فانيليا",
+      "nameEn": "Vanilla Milkshake",
+      "description": "",
+      "basePrice": 385,
+      "order": 15,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "barista",
+      "name": "ميلك شيك فريز",
+      "nameEn": "Strawberry Milkshake",
+      "description": "",
+      "basePrice": 385,
+      "order": 16,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "سوركة مع زبدة",
+      "nameEn": "Soorka With Butter",
+      "description": "",
+      "basePrice": 440,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "كشكة مع جوز",
+      "nameEn": "Kishka With Walnuts",
+      "description": "",
+      "basePrice": 385,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "حمص",
+      "nameEn": "Hummus",
+      "description": "",
+      "basePrice": 270,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "حمص بيروتي",
+      "nameEn": "Hummus Beiruti",
+      "description": "",
+      "basePrice": 295,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "حمص باللحمة",
+      "nameEn": "Hummus With Meat",
+      "description": "",
+      "basePrice": 600,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "متبل",
+      "nameEn": "Mutabbal",
+      "description": "",
+      "basePrice": 275,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "متبل بالشوندر",
+      "nameEn": "Mutabbal With Beetroot",
+      "description": "",
+      "basePrice": 295,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "محمرة",
+      "nameEn": "Muhammara",
+      "description": "",
+      "basePrice": 275,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "سوركة",
+      "nameEn": "Soorka",
+      "description": "",
+      "basePrice": 385,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "يالنجي",
+      "nameEn": "Yalangi",
+      "description": "",
+      "basePrice": 275,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "مايونيز",
+      "nameEn": "Mayonnaise",
+      "description": "",
+      "basePrice": 275,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "كريم ثوم",
+      "nameEn": "Garlic Cream",
+      "description": "",
+      "basePrice": 275,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "لبنة",
+      "nameEn": "Labneh",
+      "description": "",
+      "basePrice": 275,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "لبنة متومة",
+      "nameEn": "Labneh With Garlic",
+      "description": "",
+      "basePrice": 330,
+      "order": 14,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "لبنة مع خيار",
+      "nameEn": "Labneh With Cucumber",
+      "description": "",
+      "basePrice": 330,
+      "order": 15,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "صحن بسطرما",
+      "nameEn": "Pastrami Plate",
+      "description": "",
+      "basePrice": 770,
+      "order": 16,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "كبة نية",
+      "nameEn": "Kibbeh Nayeh",
+      "description": "",
+      "basePrice": 880,
+      "order": 17,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "كبة نية مخضرة",
+      "nameEn": "Kibbeh Nayeh With Veggies",
+      "description": "",
+      "basePrice": 930,
+      "order": 18,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "هبرة نية",
+      "nameEn": "Habra Nayeh",
+      "description": "",
+      "basePrice": 880,
+      "order": 19,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "دجاج طرطور",
+      "nameEn": "Chicken With Tarator",
+      "description": "",
+      "basePrice": 440,
+      "order": 20,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "طرطور",
+      "nameEn": "Tarator",
+      "description": "",
+      "basePrice": 220,
+      "order": 21,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "بابا غنوج",
+      "nameEn": "Baba Ghannouj",
+      "description": "",
+      "basePrice": 330,
+      "order": 22,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "مرتديلا حلبي",
+      "nameEn": "Mortadella Halabi",
+      "description": "",
+      "basePrice": 440,
+      "order": 23,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "جبنة فيتا",
+      "nameEn": "Feta Cheese",
+      "description": "",
+      "basePrice": 385,
+      "order": 24,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "سيت مقبلات",
+      "nameEn": "Appetizers Set",
+      "description": "",
+      "basePrice": 390,
+      "order": 25,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "دبس فليفلة",
+      "nameEn": "Chili Sauce",
+      "description": "",
+      "basePrice": 200,
+      "order": 26,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "صحن طلياني",
+      "nameEn": "Mortadella Plate",
+      "description": "",
+      "basePrice": 550,
+      "order": 27,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "دبس رمان",
+      "nameEn": "Pomegranate Molasses",
+      "description": "",
+      "basePrice": 110,
+      "order": 28,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "صحن اجبان",
+      "nameEn": "Cheese Plate",
+      "description": "",
+      "basePrice": 990,
+      "order": 29,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "كبيس",
+      "nameEn": "Pickles",
+      "description": "",
+      "basePrice": 110,
+      "order": 30,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "صحن اجبان و لحومات",
+      "nameEn": "Cheese & Meat Plate",
+      "description": "",
+      "basePrice": 1320,
+      "order": 31,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "cold-appetizers",
+      "name": "جاط اجبان و لحومات",
+      "nameEn": "Cheese & Meat Bowl",
+      "description": "",
+      "basePrice": 2200,
+      "order": 32,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا بروفنسال",
+      "nameEn": "Provencal Potato",
+      "description": "",
+      "basePrice": 440,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا ويدجز",
+      "nameEn": "Potato Wedges",
+      "description": "",
+      "basePrice": 330,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا حارة",
+      "nameEn": "Spicy Potato",
+      "description": "",
+      "basePrice": 330,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "برك جبنة",
+      "nameEn": "Cheese Borek",
+      "description": "",
+      "basePrice": 80,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "كبة صاجية",
+      "nameEn": "Kibbeh Sajieh",
+      "description": "",
+      "basePrice": 330,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "سجق رول",
+      "nameEn": "Sausage Roll",
+      "description": "",
+      "basePrice": 120,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "خبز بالثوم",
+      "nameEn": "Garlic Bread",
+      "description": "",
+      "basePrice": 90,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا مطفاية",
+      "nameEn": "Sauteed Potato",
+      "description": "",
+      "basePrice": 360,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا مقلية",
+      "nameEn": "Fries",
+      "description": "",
+      "basePrice": 275,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا مشوية و جبنة",
+      "nameEn": "Grilled Potato With Cheese",
+      "description": "",
+      "basePrice": 360,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا مشوية",
+      "nameEn": "Grilled Potato",
+      "description": "",
+      "basePrice": 300,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا بشاميل",
+      "nameEn": "Potato With Bechamel",
+      "description": "",
+      "basePrice": 385,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "نقانق",
+      "nameEn": "Sausage",
+      "description": "",
+      "basePrice": 820,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "جوانح مشوية",
+      "nameEn": "Grilled Wings",
+      "description": "",
+      "basePrice": 350,
+      "order": 14,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "مفركة بالفطر",
+      "nameEn": "Mushroom Mufarake",
+      "description": "",
+      "basePrice": 880,
+      "order": 15,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "باذنجان مشوي",
+      "nameEn": "Grilled Eggplant",
+      "description": "",
+      "basePrice": 330,
+      "order": 16,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "كبة حميص",
+      "nameEn": "Kibbeh Hamis",
+      "description": "",
+      "basePrice": 130,
+      "order": 17,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "جبنة مقلي - مشوي",
+      "nameEn": "Cheese Fried - Grilled",
+      "description": "",
+      "basePrice": 390,
+      "order": 18,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "موزاريلا بانيه",
+      "nameEn": "Paneed Mozzarella",
+      "description": "",
+      "basePrice": 120,
+      "order": 19,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "جوانح بروفنسال",
+      "nameEn": "Provencal Wings",
+      "description": "",
+      "basePrice": 400,
+      "order": 20,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "كبدة دجاج",
+      "nameEn": "Chicken Liver",
+      "description": "",
+      "basePrice": 450,
+      "order": 21,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "سبرينغ رول",
+      "nameEn": "Spring Rolls",
+      "description": "",
+      "basePrice": 165,
+      "order": 22,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "جوانح صوص بافلو",
+      "nameEn": "Buffalo Sauce Wings",
+      "description": "",
+      "basePrice": 550,
+      "order": 23,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "شوربة",
+      "nameEn": "Soup",
+      "description": "",
+      "basePrice": 275,
+      "order": 24,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hot-appetizers",
+      "name": "بطاطا بوت",
+      "nameEn": "Potato Boats",
+      "description": "",
+      "basePrice": 385,
+      "order": 25,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة باذنجان عراقية",
+      "nameEn": "Iraqi Eggplant Salad",
+      "description": "",
+      "basePrice": 490,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة فليفلة",
+      "nameEn": "Pepper Salad",
+      "description": "",
+      "basePrice": 330,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة دجاج",
+      "nameEn": "Chicken Salad",
+      "description": "",
+      "basePrice": 660,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "فتوش",
+      "nameEn": "Fattoush",
+      "description": "",
+      "basePrice": 480,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة شرقية",
+      "nameEn": "Eastern Salad",
+      "description": "",
+      "basePrice": 440,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة شرقية مقشرة",
+      "nameEn": "Peeled Eastern Salad",
+      "description": "",
+      "basePrice": 470,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة أرمنية",
+      "nameEn": "Armenian Salad",
+      "description": "",
+      "basePrice": 440,
+      "order": 7,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة فرنسية",
+      "nameEn": "French Salad",
+      "description": "",
+      "basePrice": 3500,
+      "order": 8,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة زعتر",
+      "nameEn": "Thyme Salad",
+      "description": "",
+      "basePrice": 490,
+      "order": 9,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة سيزر",
+      "nameEn": "Caesar Salad",
+      "description": "",
+      "basePrice": 600,
+      "order": 10,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة شوندر",
+      "nameEn": "Beetroot Salad",
+      "description": "",
+      "basePrice": 385,
+      "order": 11,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة جرجير",
+      "nameEn": "Arugula Salad",
+      "description": "",
+      "basePrice": 385,
+      "order": 12,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة فطر",
+      "nameEn": "Mushroom Salad",
+      "description": "",
+      "basePrice": 490,
+      "order": 13,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة زيتون",
+      "nameEn": "Olive Salad",
+      "description": "",
+      "basePrice": 385,
+      "order": 14,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة بقلة",
+      "nameEn": "Purslane Salad",
+      "description": "",
+      "basePrice": 385,
+      "order": 15,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة خرشوف",
+      "nameEn": "Artichoke Salad",
+      "description": "",
+      "basePrice": 600,
+      "order": 16,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة تونا",
+      "nameEn": "Tuna Salad",
+      "description": "",
+      "basePrice": 660,
+      "order": 17,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "فتوش و جبنة",
+      "nameEn": "Fattoush & Cheese Plate",
+      "description": "",
+      "basePrice": 520,
+      "order": 18,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة يونانية",
+      "nameEn": "Greek Salad",
+      "description": "",
+      "basePrice": 550,
+      "order": 19,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة روكفورد",
+      "nameEn": "Roquefort Salad",
+      "description": "",
+      "basePrice": 720,
+      "order": 20,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة ملفوف",
+      "nameEn": "Coleslaw Salad",
+      "description": "",
+      "basePrice": 420,
+      "order": 21,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة جرجير و فطر",
+      "nameEn": "Arugula & Mushroom Salad",
+      "description": "",
+      "basePrice": 490,
+      "order": 22,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة ذرة",
+      "nameEn": "Corn Salad",
+      "description": "",
+      "basePrice": 440,
+      "order": 23,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة باستا",
+      "nameEn": "Pasta Salad",
+      "description": "",
+      "basePrice": 550,
+      "order": 24,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة مكسيكية",
+      "nameEn": "Mexican Salad",
+      "description": "",
+      "basePrice": 770,
+      "order": 25,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "تبولة",
+      "nameEn": "Tabouli",
+      "description": "",
+      "basePrice": 470,
+      "order": 26,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "salads",
+      "name": "سلطة ملفوف",
+      "nameEn": "Cabbage Salad",
+      "description": "",
+      "basePrice": 385,
+      "order": 27,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "باستا صوص أبيض",
+      "nameEn": "White Sauce Pasta",
+      "description": "",
+      "basePrice": 440,
+      "order": 1,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "باستا صوص أحمر",
+      "nameEn": "Red Sauce Pasta",
+      "description": "",
+      "basePrice": 440,
+      "order": 2,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "باستا بيني أراتبياتا",
+      "nameEn": "Penne Arrabbiata Pasta",
+      "description": "",
+      "basePrice": 550,
+      "order": 3,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "باستا دجاج",
+      "nameEn": "Chicken Pasta",
+      "description": "",
+      "basePrice": 550,
+      "order": 4,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "باستا لحم",
+      "nameEn": "Beef Pasta",
+      "description": "",
+      "basePrice": 820,
+      "order": 5,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "pasta",
+      "name": "فيتوتشيني",
+      "nameEn": "Fettuccine",
+      "description": "",
+      "basePrice": 700,
+      "order": 6,
+      "isAvailable": true,
+      "variants": []
+    },
+    {
+      "categorySlug": "hookah",
+      "name": "اركيلة",
+      "nameEn": "Shisha",
+      "description": "",
+      "basePrice": 300,
+      "order": 1,
+      "isAvailable": true,
+      "variants": [
+        {
+          "label": "عادي",
+          "labelEn": "Regular",
+          "price": 300
+        },
+        {
+          "label": "اضافي",
+          "labelEn": "Extra",
+          "price": 450
+        },
+        {
+          "label": "خرطوم معقم",
+          "labelEn": "Sterile Hose",
+          "price": 100
+        }
+      ]
+    }
+  ]
+}

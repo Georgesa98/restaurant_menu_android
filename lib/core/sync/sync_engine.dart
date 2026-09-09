@@ -192,6 +192,9 @@ class SyncEngine {
 
   Future<SyncOutcome> pull({bool full = false}) async {
     final since = full ? null : await _cursor();
+    // Replace-on-first-pull (PLAN §18): no cursor means this device has only
+    // seed data (if any) — wipe tenant rows so seed ids never meet server ids.
+    final replace = full || since == null;
     try {
       final res = await _api.get(
         '/api/sync/pull',
@@ -200,7 +203,10 @@ class SyncEngine {
           if (since case final s) 'since': s,
         },
       );
-      final applied = await applyPull(res.data as Map<String, dynamic>);
+      final applied = await applyPull(
+        res.data as Map<String, dynamic>,
+        replace: replace,
+      );
       return SyncOutcome(
         full ? SyncStatus.fullRepulled : SyncStatus.ok,
         pulledCategories: applied.$1,
@@ -227,7 +233,8 @@ class SyncEngine {
   /// Applies a pull payload in one transaction. Returns (categories, items).
   /// Tombstones delete locally with cascade; changed parents replace their
   /// full child sets wholesale (translation/variant removals propagate).
-  Future<(int, int)> applyPull(Map<String, dynamic> pull) async {
+  /// With [replace], tenant rows are cleared first (first sync, §18).
+  Future<(int, int)> applyPull(Map<String, dynamic> pull, {bool replace = false}) async {
     final serverTime = pull['serverTime'] as String? ?? _nowIso();
     final tenant = pull['tenant'] as Map<String, dynamic>?;
     final categories = (pull['categories'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -236,6 +243,7 @@ class SyncEngine {
     final tenantId = tenant['id'] as String;
 
     await _db.transaction(() async {
+      if (replace) await _clearTenantLocal(tenantId);
       await _db.into(_db.tenants).insert(
             TenantsCompanion.insert(
               id: tenantId,
@@ -357,8 +365,38 @@ class SyncEngine {
     return (categories.length, items.length);
   }
 
-  Future<void> _deleteCategoryLocal(String categoryId) async {
+  /// Wipes all tenant-scoped rows (seed or stale) inside the calling txn.
+  Future<void> _clearTenantLocal(String tenantId) async {
     final itemIds = await (_db.select(_db.menuItems)
+          ..where((i) => i.tenantId.equals(tenantId)))
+        .map((i) => i.id)
+        .get();
+    final catIds = await (_db.select(_db.categories)
+          ..where((c) => c.tenantId.equals(tenantId)))
+        .map((c) => c.id)
+        .get();
+    if (itemIds.isNotEmpty) {
+      await (_db.delete(_db.menuItemTranslations)
+            ..where((t) => t.menuItemId.isIn(itemIds)))
+          .go();
+      await (_db.delete(_db.menuItemVariants)
+            ..where((v) => v.menuItemId.isIn(itemIds)))
+          .go();
+      await (_db.delete(_db.menuItems)
+            ..where((i) => i.id.isIn(itemIds)))
+          .go();
+    }
+    if (catIds.isNotEmpty) {
+      await (_db.delete(_db.categoryTranslations)
+            ..where((t) => t.categoryId.isIn(catIds)))
+          .go();
+      await (_db.delete(_db.categories)
+            ..where((c) => c.id.isIn(catIds)))
+          .go();
+    }
+  }
+
+  Future<void> _deleteCategoryLocal(String categoryId) async {    final itemIds = await (_db.select(_db.menuItems)
           ..where((i) => i.categoryId.equals(categoryId)))
         .map((i) => i.id)
         .get();
