@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'core/api/api_client.dart';
 import 'core/config/tenant_config.dart';
@@ -16,6 +18,13 @@ import 'core/theme/tenant_theme_tokens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Kiosk: portrait only, immersive sticky, never sleep (PLAN §12).
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  await WakelockPlus.enable();
   final prefs = await SharedPreferences.getInstance();
   final themeJson = await TenantConfig.current.loadFallbackThemeJson();
 

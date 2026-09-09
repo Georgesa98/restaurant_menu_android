@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/i18n/locale_controller.dart';
 import '../../core/sync/sync_engine.dart';
 import '../../core/sync/sync_scheduler.dart';
+import '../kiosk/screensaver_controller.dart';
 import 'auth/admin_auth.dart';
 
 /// Admin hub: sections, sync status + manual push, locale, logout.
@@ -62,8 +63,7 @@ class AdminPage extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const Divider(height: 32),
-          SegmentedButton<String>(
-            segments: const [
+          SegmentedButton<String>(            segments: const [
               ButtonSegment(value: 'ar', label: Text('عربي')),
               ButtonSegment(value: 'en', label: Text('EN')),
             ],
@@ -71,6 +71,8 @@ class AdminPage extends ConsumerWidget {
             onSelectionChanged: (s) =>
                 ref.read(localeControllerProvider.notifier).setLocale(s.first),
           ),
+          const SizedBox(height: 8),
+          const _ScreensaverToggle(),
         ],
       ),
     );
@@ -91,8 +93,33 @@ class AdminPage extends ConsumerWidget {
   }
 }
 
-class _SectionTile extends StatelessWidget {
-  const _SectionTile({
+/// Idle attract loop on/off (3-min timer, docs/PLAN.md §15).
+class _ScreensaverToggle extends ConsumerStatefulWidget {
+  const _ScreensaverToggle();
+
+  @override
+  ConsumerState<_ScreensaverToggle> createState() => _ScreensaverToggleState();
+}
+
+class _ScreensaverToggleState extends ConsumerState<_ScreensaverToggle> {
+  bool? _value;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled =
+        _value ?? ref.read(screensaverProvider.notifier).enabled;
+    return SwitchListTile(
+      title: const Text('Attract loop (3 min idle)'),
+      value: enabled,
+      onChanged: (v) async {
+        await ref.read(screensaverProvider.notifier).setEnabled(v);
+        setState(() => _value = v);
+      },
+    );
+  }
+}
+
+class _SectionTile extends StatelessWidget {  const _SectionTile({
     required this.icon,
     required this.title,
     required this.onTap,
