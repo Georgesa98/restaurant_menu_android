@@ -13,7 +13,7 @@ Current shell: `pubspec.yaml`, `lib/main.dart` (Hello World). Nothing to migrate
 - **Auth:** first admin login online via better-auth, then cache session/token locally for offline admin.
 - **Theme:** hybrid controlled theming only — baked fallback + pulled override stored locally (see §5). `customCss` deprecated/removed, never applied.
 - **Sync rhythm:** 15-min periodic pull (silent) + push-on-save + manual "Sync now" button in admin + pull-on-boot.
-- **Device:** customer-facing kiosk tablet, rotation locked (landscape-first), no dayparting in v1.
+- **Device:** customer-facing kiosk tablet, rotation locked (portrait), no dayparting in v1.
 - **Language:** user-toggleable AR (default) / EN, RTL when AR. `name`/`label` = canonical AR, EN in `*_translations`/`labelEn`. Numbers always Latin digits (`NumberFormat('en')`), never Arabic-Indic.
 - **Variants:** single-select pills, price updates on select, `basePrice` hidden when variants exist.
 - **Tenant bake:** `TENANT_SLUG` baked (readable, stable); resolve `Tenant.id` uuid on first pull.
@@ -288,7 +288,7 @@ Demand this from restaurants — app center-crops anything else:
 
 ## 12. Kiosk hardening + sideload
 
-- Immersive sticky, `wakelock`, landscape-first responsive (7–12" tablets), no-sleep while charging.
+- Immersive sticky, `wakelock`, portrait-first responsive (7–12" tablets), no-sleep while charging.
 - Crash auto-restart (WorkManager + `FlutterError` guard), offline banner hidden in kiosk (subtle dot), full status in admin.
 - Versioning: `versionName` = `1.x.y+<tenantSlug>.<build>`; keep `CHANGELOG` per tenant build.
 - `tool/build_tenant.sh <slug>` outputs `build/<slug>/app-release.apk`; manual install; document reinstall (data preserved via `autoBackup` unless tenant changes).
@@ -456,7 +456,7 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
 - **P1-5 Tests:** unit-test `priceLabel` + locale-resolution helpers; widget test for
   variant-pill price switching. `flutter analyze` clean.
 - **Acceptance:** demo APK, airplane mode, AR default RTL correct, EN toggle re-renders,
-  variant tap changes price, search filters, rotation locked landscape per §1
+  variant tap changes price, search filters, rotation locked portrait per §1
   (portrait still lays out sanely).
 
 ## 20. P2 — sync engine + server theme + prefetch (shipped 2026-09-08, untested vs live API)
@@ -495,3 +495,50 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
   `image_picker`, installed).
 - **Tests**: 7 write-layer tests (slugify, dirty-marking, cascade delete, reorder,
   variant replace) — 27/27 green, analyze clean. Live login/push pending deploy.
+
+## 22. P4 — kiosk hardening + attract loop (shipped 2026-09-08, on-device QA pending)
+
+- **Lockdown**: portrait-only, immersive-sticky, wakelock on at boot (PLAN §12);
+  Android back blocked on the menu root (`PopScope`), admin keeps back.
+- **Attract loop** (`features/kiosk`): 3-min idle → fullscreen cover + pinned logo +
+  top photo dishes + touch-to-browse; any touch dismisses + re-arms; admin toggle
+  (persisted). Screensaver fires on the kiosk surface only (admin stays awake).
+- **Release**: `tool/build_tenant.sh <slug>` → `build/<slug>/app-release.apk`.
+  Known limit: single `applicationId` across tenants (no flavors yet) — fine for
+  one-tenant-per-tablet sideloading; revisit if multi-tenant devices ever needed.
+- **Tests**: 3 screensaver tests (default, dismiss, toggle persist) — 30/30 green,
+  analyze clean.
+
+## 23. Web mimic — style + ordering (shipped 2026-09-08, on-device QA pending)
+
+Mirrors `order-menu.tsx` anatomy; controlled-theming policy holds (new constants are
+fixed brand neutrals, `customCss` still never read).
+
+- **Hero**: eyebrow + Alex Brush script title (bundled; Arabic falls back) or pinned
+  logo, tagline, address/phone, locale pill; 5-tap title → admin.
+- **Tabs**: sticky underline pills (uppercase, letterspaced, muted → primary + 2px
+  accent), **All** first with stacked sections (null selection = all).
+- **Sections**: italic serif primary header + 0.5px hairline; per-section streams.
+- **Cards**: 0.5px hairline, radius 16, 4:3 photo on cream wash, per-slug accent
+  placeholder icons, name + `#9C7638` price row, 2-line desc, variant chips with
+  prices (accent fill selected, accent outline when qty>0), secondary tag pills.
+- **Ordering**: `+ ADD` → qty stepper with accent splash, sticky primary counter bar
+  (count + total), bottom-sheet order list with steppers/clear/total; quantities
+  persisted per tenant (`menu-order:<slug>`); `itemId:variantId` key scheme.
+- **Currency**: `SYP 180` / `180 ل.س`, Latin digits always; unselected variants show
+  `from`/`من` min.
+- **Tests**: currency/displayPrice units, card price-switch (mock prefs) — 34/34
+  green, analyze clean.
+
+## 24. Demo seed — full valley-star dataset (shipped 2026-09-08)
+
+- **Converter** (web repo `tool/export-seed.mjs`, plain node): parses (never imports)
+  `prisma/seed.ts` literals → `assets/seed/demo.json`: 13 categories, 200 items,
+  52 variants, AR+EN names, valley-star theme tokens. Demo tenant only.
+- **Loader** (`core/db/seed_tenant.dart`): mints v4 ids (slug-matched), variant items
+  get null `basePrice` (web rule), all rows `dirty=false`; demo dispatch in
+  `db_provider` (other slugs start empty). Replaces the old 1-item `seed_demo`.
+- **Replace-on-first-pull** (`sync_engine`): no cursor → clear tenant rows before
+  applying the full dump, so seed ids never meet server ids.
+- **Tests**: seed smoke (counts, FK validity, EN coverage, variant-price rules) —
+  36/36 green, analyze clean. No photos in seed (placeholder icon path).
