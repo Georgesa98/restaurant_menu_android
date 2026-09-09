@@ -50,6 +50,41 @@ void main() {
     });
   });
 
+  group('priceWithCurrency', () {
+    test('EN prefixes SYP, AR suffixes ل.س, Latin digits both', () {
+      expect(priceWithCurrency(180, 'en'), 'SYP 180');
+      expect(priceWithCurrency(180, 'ar'), '180 ل.س');
+      expect(priceWithCurrency(180, 'ar'), isNot(contains(RegExp(r'[٠-٩]'))));
+    });
+  });
+
+  group('displayPrice', () {
+    test('base price when no variants', () {
+      expect(
+        displayPrice(basePrice: 100, variantPrices: [], selectedIndex: -1, locale: 'en'),
+        'SYP 100',
+      );
+    });
+
+    test('selected variant price', () {
+      expect(
+        displayPrice(basePrice: 100, variantPrices: [90, 180], selectedIndex: 1, locale: 'ar'),
+        '180 ل.س',
+      );
+    });
+
+    test('from-min when unselected', () {
+      expect(
+        displayPrice(basePrice: null, variantPrices: [180, 90], selectedIndex: -1, locale: 'en'),
+        'from SYP 90',
+      );
+      expect(
+        displayPrice(basePrice: null, variantPrices: [180, 90], selectedIndex: -1, locale: 'ar'),
+        'من 90 ل.س',
+      );
+    });
+  });
+
   group('matchesQuery', () {
     test('empty query matches all', () {
       expect(matchesQuery(query: '', name: 'x', translatedName: null), isTrue);

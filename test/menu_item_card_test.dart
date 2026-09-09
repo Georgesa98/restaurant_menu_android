@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restaurant_menu_android/core/db/app_db.dart';
+import 'package:restaurant_menu_android/core/i18n/locale_controller.dart';
 import 'package:restaurant_menu_android/features/menu/menu_providers.dart';
 import 'package:restaurant_menu_android/features/menu/widgets/menu_item_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 MenuItemView _view() => MenuItemView(
       item: MenuItem(
@@ -52,20 +54,23 @@ void main() {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(home: Scaffold(body: _Card())),
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const MaterialApp(home: Scaffold(body: _Card())),
       ),
     );
 
-    expect(find.text('from 100'), findsOneWidget);
+    expect(find.text('from SYP 100'), findsOneWidget);
 
-    await tester.tap(find.text('Full'));
+    await tester.tap(find.textContaining('Full'));
     await tester.pump();
 
-    expect(find.text('180'), findsOneWidget);
-    expect(find.text('from 100'), findsNothing);
+    expect(find.text('SYP 180'), findsOneWidget);
+    expect(find.text('from SYP 100'), findsNothing);
   });
 }
 
@@ -73,5 +78,5 @@ class _Card extends StatelessWidget {
   const _Card();
 
   @override
-  Widget build(BuildContext context) => MenuItemCard(view: _view());
+  Widget build(BuildContext context) => MenuItemCard(view: _view(), categorySlug: 'grill');
 }
