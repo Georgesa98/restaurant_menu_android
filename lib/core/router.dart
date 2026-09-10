@@ -6,24 +6,24 @@ import '../features/admin/admin_login_page.dart';
 import '../features/admin/admin_page.dart';
 import '../features/admin/categories_admin_page.dart';
 import '../features/admin/items_admin_page.dart';
+import '../features/admin/widgets/admin_shell.dart';
 import '../features/menu/menu_page.dart';
 
-/// Routes: `/` kiosk menu, `/admin/login`, `/admin/*` (guarded: P3 auth).
-/// Admin entry stays hidden in the kiosk UI (logo multi-tap).
+/// Routes: `/` kiosk menu, `/admin/login`, `/admin/*` (locked by default).
+/// The sync session persists, but admin *screens* need a fresh unlock;
+/// re-entry always asks the password again.
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
   final loggedIn = auth.status == AuthStatus.authenticated;
+  final unlocked = ref.watch(adminUnlockedProvider);
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
       final at = state.matchedLocation;
       final goingLogin = at == '/admin/login';
       final goingAdmin = at.startsWith('/admin');
-      if (goingAdmin && !goingLogin && !loggedIn) {
-        if (auth.status == AuthStatus.unauthenticated) return '/admin/login';
-        return null; // still checking: let it through, pages handle it
-      }
-      if (goingLogin && loggedIn) return '/admin';
+      if (goingAdmin && !goingLogin && !unlocked) return '/admin/login';
+      if (goingLogin && loggedIn && unlocked) return '/admin';
       return null;
     },
     routes: [
@@ -40,17 +40,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         name: 'admin',
-        builder: (context, state) => const AdminPage(),
+        builder: (context, state) =>
+            const AdminShell(child: AdminPage()),
         routes: [
           GoRoute(
             path: 'categories',
             name: 'admin-categories',
-            builder: (context, state) => const CategoriesAdminPage(),
+            builder: (context, state) =>
+                const AdminShell(child: CategoriesAdminPage()),
           ),
           GoRoute(
             path: 'items',
             name: 'admin-items',
-            builder: (context, state) => const ItemsAdminPage(),
+            builder: (context, state) =>
+                const AdminShell(child: ItemsAdminPage()),
           ),
         ],
       ),

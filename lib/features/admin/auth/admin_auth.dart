@@ -133,12 +133,14 @@ class AuthController extends Notifier<AuthState> {
       // Best effort; local session is cleared regardless.
     }
     await _api.clearSession();
+    ref.read(adminUnlockedProvider.notifier).lock();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
   /// A 401 from any later call lands here: wipe and force re-login.
   Future<void> forceRelogin() async {
     await _api.clearSession();
+    ref.read(adminUnlockedProvider.notifier).lock();
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       error: 'Session expired — please log in again',
@@ -160,3 +162,18 @@ class AuthController extends Notifier<AuthState> {
 
 final authControllerProvider =
     NotifierProvider<AuthController, AuthState>(AuthController.new);
+
+/// UI unlock gate (docs/PLAN.md hardened admin). Separate from the sync
+/// session: the token stays cached for offline push, but admin *screens*
+/// require a fresh unlock. Login unlocks; auto-lock, manual lock, or logout
+/// clears it — re-entry always asks the password again.
+class _Unlock extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void unlock() => state = true;
+  void lock() => state = false;
+}
+
+final adminUnlockedProvider =
+    NotifierProvider<_Unlock, bool>(_Unlock.new);

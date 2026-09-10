@@ -22,10 +22,19 @@ class AdminPage extends ConsumerWidget {
         title: const Text('Admin'),
         actions: [
           IconButton(
+            tooltip: 'Lock',
+            icon: const Icon(Icons.lock_outline),
+            onPressed: () {
+              ref.read(adminUnlockedProvider.notifier).lock();
+              context.go('/');
+            },
+          ),
+          IconButton(
             tooltip: 'Log out',
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).logout();
+              ref.read(adminUnlockedProvider.notifier).lock();
               if (context.mounted) context.go('/admin/login');
             },
           ),
