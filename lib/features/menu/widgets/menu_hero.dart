@@ -24,9 +24,8 @@ final _brandFilesProvider =
 /// Web hero (order-menu.tsx header): eyebrow + script title (or logo),
 /// tagline, address/phone. 5-tap on the title opens admin login.
 class MenuHero extends ConsumerWidget {
-  const MenuHero({super.key, required this.onTitleTap, required this.tenant});
+  const MenuHero({super.key, required this.tenant});
 
-  final VoidCallback onTitleTap;
   final Tenant? tenant;
 
   @override
@@ -63,17 +62,14 @@ class MenuHero extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: onTitleTap,
-              child: Text(
-                name,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: WebPalette.scriptFont,
-                  fontSize: 48,
-                  height: 1.0,
-                  color: theme.colorScheme.primary,
-                ),
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: WebPalette.scriptFont,
+                fontSize: 48,
+                height: 1.0,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(height: 12),

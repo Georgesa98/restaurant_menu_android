@@ -10,6 +10,7 @@ import '../kiosk/attract_loop.dart';
 import '../kiosk/screensaver_controller.dart';
 import './menu_providers.dart';
 import 'widgets/category_tab_bar.dart';
+import 'widgets/corner_hotspot.dart';
 import 'widgets/menu_hero.dart';
 import 'widgets/menu_section.dart';
 import 'widgets/order_bar.dart';
@@ -24,16 +25,6 @@ class MenuPage extends ConsumerStatefulWidget {
 }
 
 class _MenuPageState extends ConsumerState<MenuPage> {
-  int _taps = 0;
-
-  void _onTitleTap() {
-    _taps++;
-    if (_taps >= 5) {
-      _taps = 0;
-      context.go('/admin/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoryViewsProvider);
@@ -61,21 +52,24 @@ class _MenuPageState extends ConsumerState<MenuPage> {
         : categories.where((c) => c.category.id == selected).toList();
 
     // Kiosk lockdown: Android back does nothing on the menu root.
+    // Hidden admin entry: 2s hold on the bottom-right corner hotspot.
     return PopScope(
       canPop: false,
       child: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) => ref.read(screensaverProvider.notifier).poke(),
         child: Scaffold(
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: MenuHero(onTitleTap: _onTitleTap, tenant: tenantRow),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabBarDelegate(child: const CategoryTabBar()),
-              ),
+          body: Stack(
+            children: [
+              CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: MenuHero(tenant: tenantRow),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TabBarDelegate(child: const CategoryTabBar()),
+                  ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -108,12 +102,22 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                     itemBuilder: (_, i) => MenuSection(view: sections[i]),
                   ),
                 ),
-            ],
-          ),
-          bottomNavigationBar: const OrderBar(),
+              ],
+            ),
+            // Hidden admin entry: 2s hold, bottom-right corner.
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: CornerHotspot(
+                onTrigger: () => context.go('/admin/login'),
+              ),
+            ),
+          ],
         ),
+        bottomNavigationBar: const OrderBar(),
       ),
-    );
+    ),
+  );
   }
 }
 

@@ -28,14 +28,29 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
     final ok = await ref
         .read(authControllerProvider.notifier)
         .login(_email.text, _password.text);
-    if (ok && mounted) context.go('/admin');
+    if (ok) {
+      // Fresh unlock for this admin session; auto-lock re-locks on idle.
+      ref.read(adminUnlockedProvider.notifier).unlock();
+      if (mounted) context.go('/admin');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Admin login')),
+    // Kiosk consistency: system back is inert here too; the AppBar
+    // back arrow is the way back to the menu.
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+      appBar: AppBar(
+        title: const Text('Admin login'),
+        leading: IconButton(
+          tooltip: 'Back to menu',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/'),
+        ),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -97,6 +112,6 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
