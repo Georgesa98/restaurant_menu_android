@@ -542,3 +542,23 @@ fixed brand neutrals, `customCss` still never read).
   applying the full dump, so seed ids never meet server ids.
 - **Tests**: seed smoke (counts, FK validity, EN coverage, variant-price rules) —
   36/36 green, analyze clean. No photos in seed (placeholder icon path).
+
+## 25. Hardened admin + masonry cards (shipped 2026-09-08)
+
+- **UI lock separated from sync session**: `adminUnlockedProvider` gates all
+  `/admin/*` screens; login unlocks, 2-min admin idle auto-locks + returns to
+  kiosk (`AdminShell`), manual Lock button in hub, logout/401 lock too. Token
+  stays cached so sync/push keep working. Re-entry always asks the password.
+- **Cards fit content**: `MasonryGridView` per section (same 1–3 cols/gaps);
+  card restructured to min-size column (no Expanded/Spacer — unbounded height),
+  stepper follows content. Fixed `childAspectRatio` stretch gone.
+- **Tests**: unlock transitions, idle auto-lock, interaction re-arm — 39/39
+  green, analyze clean.
+
+## 26. Admin entry + login UX (shipped 2026-09-08)
+
+- **Entry**: title 5-tap replaced by invisible bottom-right corner hotspot
+  (`CornerHotspot`, 2s hold, early-lift cancels). No visual hint, no ripple.
+- **Login screen**: AppBar back arrow → kiosk; system back inert (kiosk
+  consistency via `PopScope`). No more dead-end.
+- **Tests**: hotspot fires/early-lift/custom-hold — 42/42 green, analyze clean.
