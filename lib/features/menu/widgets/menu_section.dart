@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../../../core/theme/web_palette.dart';
 import '../menu_providers.dart';
@@ -64,21 +65,19 @@ class MenuSection extends ConsumerWidget {
                     : constraints.maxWidth >= 600
                         ? 2
                         : 1;
-                return GridView.builder(
+                // Masonry: cards wrap their content (no fixed aspect stretch).
+                return MasonryGridView.count(
+                  crossAxisCount: cols,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 14,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.zero,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
-                    mainAxisSpacing: 14,
-                    crossAxisSpacing: 14,
-                    childAspectRatio: 0.62,
+                  itemCount: views.length,
+                  itemBuilder: (_, i) => MenuItemCard(
+                    view: views[i],
+                    categorySlug: view.category.slug,
                   ),
-                      itemCount: views.length,
-                      itemBuilder: (_, i) => MenuItemCard(
-                        view: views[i],
-                        categorySlug: view.category.slug,
-                      ),
                 );
               },
             ),

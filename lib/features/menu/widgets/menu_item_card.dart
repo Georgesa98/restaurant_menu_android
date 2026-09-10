@@ -40,7 +40,9 @@ class MenuItemCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       clipBehavior: Clip.antiAlias,
+      // Masonry gives unbounded height: plain min-size column, no Expanded.
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AspectRatio(
@@ -57,12 +59,12 @@ class MenuItemCard extends ConsumerWidget {
                   : _PlaceholderIcon(slug: categorySlug),
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -163,7 +165,6 @@ class MenuItemCard extends ConsumerWidget {
                       ],
                     ),
                   ],
-                  const Spacer(),
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Align(
@@ -180,12 +181,11 @@ class MenuItemCard extends ConsumerWidget {
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
   }
-}
 
 class _PlaceholderIcon extends StatelessWidget {
   const _PlaceholderIcon({required this.slug});
