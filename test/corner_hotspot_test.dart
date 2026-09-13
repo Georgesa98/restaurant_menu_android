@@ -46,7 +46,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: CornerHotspot(
-            hold: Duration(milliseconds: 100),
+            hold: const Duration(seconds: 1),
             onTrigger: () => fired++,
           ),
         ),
@@ -55,7 +55,29 @@ void main() {
 
     final center = tester.getCenter(find.byType(CornerHotspot));
     final gesture = await tester.startGesture(center);
-    await tester.pump(const Duration(milliseconds: 150));
+    // Long-press recognises at ~500ms, then holds the remaining 500ms.
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(fired, 0);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(fired, 1);
+    await gesture.up();
+  });
+
+  testWidgets('finger drift within slop does not cancel the hold',
+      (tester) async {
+    var fired = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CornerHotspot(onTrigger: () => fired++),
+        ),
+      ),
+    );
+
+    final center = tester.getCenter(find.byType(CornerHotspot));
+    final gesture = await tester.startGesture(center);
+    await gesture.moveBy(const Offset(8, 6));
+    await tester.pump(const Duration(seconds: 3));
     expect(fired, 1);
     await gesture.up();
   });

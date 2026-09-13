@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/tenant_config.dart';
 import '../../../core/db/app_db.dart';
@@ -49,7 +51,10 @@ class MenuHero extends ConsumerWidget {
           if (logoFile != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: SizedBox(height: 64, child: Image.file(logoFile)),
+              child: _TitleTapEntry(
+                child:
+                    SizedBox(height: 64, child: Image.file(logoFile)),
+              ),
             )
           else ...[
             Text(
@@ -62,14 +67,16 @@ class MenuHero extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: WebPalette.scriptFont,
-                fontSize: 48,
-                height: 1.0,
-                color: theme.colorScheme.primary,
+            _TitleTapEntry(
+              child: Text(
+                name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: WebPalette.scriptFont,
+                  fontSize: 48,
+                  height: 1.0,
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -116,6 +123,51 @@ class _LocalePill extends ConsumerWidget {
       selected: {locale},
       onSelectionChanged: (s) =>
           ref.read(localeControllerProvider.notifier).setLocale(s.first),
+    );
+  }
+}
+
+/// Hidden admin entry (backup for the corner hotspot): 5 taps on the brand
+/// title/logo within 3s opens admin login. Single taps do nothing visible.
+class _TitleTapEntry extends StatefulWidget {
+  const _TitleTapEntry({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_TitleTapEntry> createState() => _TitleTapEntryState();
+}
+
+class _TitleTapEntryState extends State<_TitleTapEntry> {
+  static const _need = 5;
+  static const _window = Duration(seconds: 3);
+
+  int _taps = 0;
+  Timer? _reset;
+
+  @override
+  void dispose() {
+    _reset?.cancel();
+    super.dispose();
+  }
+
+  void _onTap() {
+    _reset?.cancel();
+    _taps++;
+    if (_taps >= _need) {
+      _taps = 0;
+      context.go('/admin/login');
+      return;
+    }
+    _reset = Timer(_window, () => _taps = 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: _onTap,
+      child: widget.child,
     );
   }
 }
