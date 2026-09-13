@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,6 +26,13 @@ Future<void> main() async {
   ]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await WakelockPlus.enable();
+  // Local-dev overrides (gitignored `.env` asset). A missing file (fresh
+  // clone, CI) is fine — TenantConfig falls back to --dart-define/defaults.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // No .env bundled; dart-define/defaults apply.
+  }
   final prefs = await SharedPreferences.getInstance();
   final themeJson = await TenantConfig.current.loadFallbackThemeJson();
 

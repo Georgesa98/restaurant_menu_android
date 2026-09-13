@@ -14,6 +14,7 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   flutter:
     sdk: flutter
+  flutter_dotenv: ^6.0.1
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.3
@@ -41,6 +42,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/tenants/demo/theme.json
     - assets/tenants/valley-star/theme.json
     - assets/seed/demo.json
