@@ -13,6 +13,7 @@ import 'core/i18n/locale_controller.dart';
 import 'core/router.dart';
 import 'core/sync/sync_engine.dart';
 import 'core/sync/sync_scheduler.dart';
+import 'features/menu/menu_tenant_id.dart';
 import 'core/theme/active_theme.dart';
 import 'core/theme/tenant_theme_mapper.dart';
 import 'core/theme/tenant_theme_tokens.dart';
@@ -44,9 +45,13 @@ Future<void> main() async {
           (ref) => SyncEngine(
             ref.watch(appDbProvider),
             ref.watch(apiClientProvider),
-            onTenantResolved: (id) => ref
-                .read(secureStorageProvider)
-                .write(key: 'tenant_id', value: id),
+            onTenantResolved: (id) async {
+              await ref
+                  .read(secureStorageProvider)
+                  .write(key: 'tenant_id', value: id);
+              // Kiosk/admin reads follow the server uuid from here on.
+              ref.read(menuTenantIdProvider.notifier).adopt(id);
+            },
           ),
         ),
       ],

@@ -5,7 +5,7 @@ import 'package:drift/drift.dart';
 import '../../core/config/tenant_config.dart';
 import '../../core/db/db_provider.dart';
 import '../../core/i18n/locale_controller.dart';
-import 'data/menu_repository.dart' show currentMenuTenantId;
+import 'menu_tenant_id.dart';
 
 /// One order line, keyed exactly like web (`itemId` or `itemId:variantId`).
 class OrderEntry {
@@ -88,7 +88,7 @@ final orderEntriesProvider = FutureProvider<List<OrderEntry>>((ref) async {
   if (quantities.isEmpty) return const [];
   final locale = ref.watch(localeControllerProvider).languageCode;
   final db = ref.watch(appDbProvider);
-  final tid = currentMenuTenantId();
+  final tid = ref.watch(menuTenantIdProvider);
   if (tid.isEmpty) return const [];
 
   final cats = await (db.select(db.categories)

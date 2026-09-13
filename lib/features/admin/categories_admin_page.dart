@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/db/app_db.dart';
 import '../../core/db/db_provider.dart';
+import '../../features/menu/menu_tenant_id.dart';
 import 'data/admin_writes.dart';
 import 'widgets/save_and_push.dart';
 
 final _allCategoriesProvider = StreamProvider<List<Category>>((ref) async* {
   await ref.watch(dbReadyProvider.future);
-  final tid = await resolveWriteTenantId(ref.read(secureStorageProvider));
+  // Same reactive server uuid as the kiosk (baked id pre-pull).
+  final tid = ref.watch(menuTenantIdProvider);
   if (tid.isEmpty) {
     yield [];
     return;

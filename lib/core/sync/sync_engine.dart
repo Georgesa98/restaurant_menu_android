@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
@@ -243,7 +244,10 @@ class SyncEngine {
     final tenantId = tenant['id'] as String;
 
     await _db.transaction(() async {
-      if (replace) await _clearTenantLocal(tenantId);
+      // First pull: wipe EVERYTHING tenant-scoped (seed rows included) so
+      // stale seed data can never mix with server rows, and duplicate
+      // tenant rows can't break slug lookups.
+      if (replace) await _clearAllTenantLocal();
       await _db.into(_db.tenants).insert(
             TenantsCompanion.insert(
               id: tenantId,
@@ -362,38 +366,22 @@ class SyncEngine {
     });
 
     await _onTenantResolved?.call(tenantId);
+    debugPrint(
+      'sync/applyPull tenant=$tenantId replace=$replace '
+      'categories=${categories.length} items=${items.length}',
+    );
     return (categories.length, items.length);
   }
 
-  /// Wipes all tenant-scoped rows (seed or stale) inside the calling txn.
-  Future<void> _clearTenantLocal(String tenantId) async {
-    final itemIds = await (_db.select(_db.menuItems)
-          ..where((i) => i.tenantId.equals(tenantId)))
-        .map((i) => i.id)
-        .get();
-    final catIds = await (_db.select(_db.categories)
-          ..where((c) => c.tenantId.equals(tenantId)))
-        .map((c) => c.id)
-        .get();
-    if (itemIds.isNotEmpty) {
-      await (_db.delete(_db.menuItemTranslations)
-            ..where((t) => t.menuItemId.isIn(itemIds)))
-          .go();
-      await (_db.delete(_db.menuItemVariants)
-            ..where((v) => v.menuItemId.isIn(itemIds)))
-          .go();
-      await (_db.delete(_db.menuItems)
-            ..where((i) => i.id.isIn(itemIds)))
-          .go();
-    }
-    if (catIds.isNotEmpty) {
-      await (_db.delete(_db.categoryTranslations)
-            ..where((t) => t.categoryId.isIn(catIds)))
-          .go();
-      await (_db.delete(_db.categories)
-            ..where((c) => c.id.isIn(catIds)))
-          .go();
-    }
+  /// Wipes all tenant-scoped rows (any tenant id: seed or stale) inside the
+  /// calling txn. Children before parents; tenants last (slug lookups).
+  Future<void> _clearAllTenantLocal() async {
+    await (_db.delete(_db.menuItemTranslations)).go();
+    await (_db.delete(_db.menuItemVariants)).go();
+    await (_db.delete(_db.menuItems)).go();
+    await (_db.delete(_db.categoryTranslations)).go();
+    await (_db.delete(_db.categories)).go();
+    await (_db.delete(_db.tenants)).go();
   }
 
   Future<void> _deleteCategoryLocal(String categoryId) async {    final itemIds = await (_db.select(_db.menuItems)

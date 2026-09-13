@@ -10,6 +10,7 @@ import '../../core/db/app_db.dart';
 import '../../core/db/db_provider.dart';
 import '../../core/i18n/locale_controller.dart';
 import '../../core/sync/image_prefetch.dart';
+import '../menu/menu_tenant_id.dart';
 
 class _Dish {
   const _Dish({required this.name, required this.imageUrl});
@@ -35,10 +36,8 @@ final _attractDataProvider = FutureProvider<_AttractData>((ref) async {
   final db = ref.watch(appDbProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
   final prefetch = ImagePrefetch(Dio(), prefs);
-  final slug = TenantConfig.current.slug;
-  final tid = TenantConfig.current.tenantId.isNotEmpty
-      ? TenantConfig.current.tenantId
-      : (slug == 'demo' ? 'demo' : '');
+  // Server uuid once pulled (baked id before) — same source as the menu.
+  final tid = ref.watch(menuTenantIdProvider);
 
   final locale = ref.watch(localeControllerProvider).languageCode;
   final items = tid.isEmpty ? <MenuItem>[] : await db.topItemsWithImages(tid, 12);

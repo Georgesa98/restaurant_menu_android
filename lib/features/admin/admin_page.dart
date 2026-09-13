@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/i18n/locale_controller.dart';
 import '../../core/sync/sync_engine.dart';
 import '../../core/sync/sync_scheduler.dart';
+import '../../features/menu/menu_tenant_id.dart';
 import '../kiosk/screensaver_controller.dart';
 import 'auth/admin_auth.dart';
 
@@ -17,6 +18,7 @@ class AdminPage extends ConsumerWidget {
     final locale = ref.watch(localeControllerProvider);
     final snapshot = ref.watch(lastSyncProvider);
     final email = ref.watch(authControllerProvider).email;
+    final menuTid = ref.watch(menuTenantIdProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin'),
@@ -71,6 +73,13 @@ class AdminPage extends ConsumerWidget {
             _statusLine(snapshot),
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 4),
+          Text(
+            // Queried tenant id (server uuid post-pull): makes menu/admin
+            // identity mismatches self-evident on-device.
+            'tenant ${menuTid.isEmpty ? '—' : _shortId(menuTid)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const Divider(height: 32),
           SegmentedButton<String>(            segments: const [
               ButtonSegment(value: 'ar', label: Text('عربي')),
@@ -86,6 +95,9 @@ class AdminPage extends ConsumerWidget {
       ),
     );
   }
+
+  String _shortId(String id) =>
+      id.length > 8 ? '${id.substring(0, 8)}…' : id;
 
   String _statusLine(SyncSnapshot? s) {
     if (s == null) return 'Never synced';

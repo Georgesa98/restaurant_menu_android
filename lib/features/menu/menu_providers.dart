@@ -5,7 +5,8 @@ import '../../core/db/db_provider.dart';
 import '../../core/i18n/locale_controller.dart';
 import 'menu_format.dart';
 import 'data/menu_repository.dart'
-    show MenuRepository, menuRepositoryProvider, currentMenuTenantId;
+    show MenuRepository, menuRepositoryProvider;
+import 'menu_tenant_id.dart';
 
 class CategoryView {
   const CategoryView({required this.category, required this.name});
@@ -35,7 +36,11 @@ Stream<T> _ready<T>(Ref ref, Stream<T> Function(MenuRepository) pick) async* {
 }
 
 final _categoriesStreamProvider = StreamProvider<List<Category>>(
-  (ref) => _ready(ref, (r) => r.watchCategories(currentMenuTenantId())),
+  (ref) {
+    // Reactive server uuid (falls back to baked id pre-pull).
+    final tid = ref.watch(menuTenantIdProvider);
+    return _ready(ref, (r) => r.watchCategories(tid));
+  },
 );
 final _categoryTranslationsStreamProvider =
     StreamProvider<List<CategoryTranslation>>(
