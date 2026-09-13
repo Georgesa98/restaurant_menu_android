@@ -126,6 +126,21 @@ MenuItemView _toView(
   );
 }
 
+final categoryViewByIdProvider =
+    Provider.family<CategoryView?, String>((ref, id) {
+  final all = ref.watch(categoryViewsProvider);
+  for (final v in all) {
+    if (v.category.id == id) return v;
+  }
+  return null;
+});
+
+/// Raw visible-item count per category (ignores search — search UI removed).
+final categoryItemCountProvider = Provider.family<int, String>((ref, id) {
+  final items = ref.watch(_itemsStreamProvider(id)).value ?? [];
+  return items.length;
+});
+
 class _Selection extends Notifier<String?> {
   @override
   String? build() => null;

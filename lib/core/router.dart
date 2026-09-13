@@ -7,6 +7,7 @@ import '../features/admin/admin_page.dart';
 import '../features/admin/categories_admin_page.dart';
 import '../features/admin/items_admin_page.dart';
 import '../features/admin/widgets/admin_shell.dart';
+import '../features/menu/category_detail_page.dart';
 import '../features/menu/menu_page.dart';
 
 /// Routes: `/` kiosk menu, `/admin/login`, `/admin/*` (locked by default).
@@ -31,6 +32,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/',
         name: 'menu',
         builder: (context, state) => const MenuPage(),
+      ),
+      GoRoute(
+        path: '/c/:categoryId',
+        name: 'category',
+        builder: (context, state) => CategoryDetailPage(
+          categoryId: state.pathParameters['categoryId']!,
+        ),
       ),
       GoRoute(
         path: '/admin/login',
