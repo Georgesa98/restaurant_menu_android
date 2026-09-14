@@ -56,8 +56,10 @@ class AuthController extends Notifier<AuthState> {
 
   /// Validates the cached token, else drops to unauthenticated.
   Future<void> check() async {
+    if (!ref.mounted) return;
     try {
       final res = await _api.get('/api/auth/get-session');
+      if (!ref.mounted) return;
       final user = _userOf(res.data);
       if (user == null) {
         state = state.copyWith(status: AuthStatus.unauthenticated);
@@ -69,8 +71,10 @@ class AuthController extends Notifier<AuthState> {
         tenantId: user['tenantId'] as String?,
       );
     } on DioException catch (e) {
+      if (!ref.mounted) return;
       if (e.error is UnauthorizedException) {
         await _api.clearSession();
+        if (!ref.mounted) return;
         state = state.copyWith(status: AuthStatus.unauthenticated);
         return;
       }
@@ -78,6 +82,7 @@ class AuthController extends Notifier<AuthState> {
       // with no cached session land unauthenticated only if check fails
       // without any cache.
       final token = await _api.sessionToken();
+      if (!ref.mounted) return;
       state = state.copyWith(
         status: (token != null && token.isNotEmpty)
             ? AuthStatus.authenticated

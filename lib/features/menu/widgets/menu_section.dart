@@ -58,13 +58,14 @@ class MenuSection extends ConsumerWidget {
               ),
             )
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final cols = constraints.maxWidth >= 900
-                    ? 3
-                    : constraints.maxWidth >= 600
-                        ? 2
-                        : 1;
+            Builder(
+              builder: (context) {
+                // Phone 1 col, tablet 2 cols (capped at 2).
+                // Use shortestSide so 7-8" portrait (~600dp minus
+                // page padding) still reliably gets 2 columns.
+                final shortest =
+                    MediaQuery.sizeOf(context).shortestSide;
+                final cols = shortest >= 600 ? 2 : 1;
                 // Masonry: cards wrap their content (no fixed aspect stretch).
                 return MasonryGridView.count(
                   crossAxisCount: cols,

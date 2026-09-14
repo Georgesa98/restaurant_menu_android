@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,13 +14,37 @@ import '../features/menu/menu_page.dart';
 /// Routes: `/` kiosk menu, `/admin/login`, `/admin/*` (locked by default).
 /// The sync session persists, but admin *screens* need a fresh unlock;
 /// re-entry always asks the password again.
+///
+/// The router itself is stable: it must NOT be recreated on every auth state
+/// change (e.g. `working`/`error` during a failed login flipped the whole
+/// `MaterialApp.router` back to `/`). Only `loggedIn`/`unlocked` re-evaluate
+/// `redirect`, via [routerRefreshProvider].
+class _RouterRefresh extends ChangeNotifier {
+  void poke() => notifyListeners();
+}
+
+final routerRefreshProvider = Provider<Listenable>((ref) {
+  final refresh = _RouterRefresh();
+  ref.onDispose(refresh.dispose);
+  // Failed logins only touch working/error — deliberately not listened to.
+  ref.listen<bool>(
+    authControllerProvider.select((s) => s.status == AuthStatus.authenticated),
+    (_, _) => refresh.poke(),
+  );
+  ref.listen<bool>(adminUnlockedProvider, (_, _) => refresh.poke());
+  return refresh;
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authControllerProvider);
-  final loggedIn = auth.status == AuthStatus.authenticated;
-  final unlocked = ref.watch(adminUnlockedProvider);
-  return GoRouter(
+  final refresh = ref.watch(routerRefreshProvider);
+  final router = GoRouter(
     initialLocation: '/',
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final loggedIn =
+          ref.read(authControllerProvider).status ==
+          AuthStatus.authenticated;
+      final unlocked = ref.read(adminUnlockedProvider);
       final at = state.matchedLocation;
       final goingLogin = at == '/admin/login';
       final goingAdmin = at.startsWith('/admin');
@@ -67,4 +92,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.onDispose(router.dispose);
+  return router;
 });
