@@ -21,9 +21,9 @@ class MenuItemCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final quantities = ref.watch(quantitiesProvider);
-    final selById = ref.watch(variantSelectionProvider);
-    final sel = selById[view.item.id] ?? -1;
+    final sel = ref.watch(
+      variantSelectionProvider.select((m) => m[view.item.id] ?? -1),
+    );
     final hasVariants = view.variants.isNotEmpty;
     final selectedVariant =
         hasVariants && sel >= 0 && sel < view.variants.length ? view.variants[sel] : null;
@@ -31,7 +31,8 @@ class MenuItemCard extends ConsumerWidget {
       view.item.id,
       hasVariants ? (selectedVariant?.id ?? view.variants.first.id) : null,
     );
-    final qty = quantities[qtyKey] ?? 0;
+    // Subscribe to this card's quantity only — other steppers don't rebuild us.
+    final qty = ref.watch(quantitiesProvider.select((m) => m[qtyKey] ?? 0));
 
     return Container(
       decoration: BoxDecoration(
@@ -130,7 +131,7 @@ class MenuItemCard extends ConsumerWidget {
                             locale: locale,
                             selected: sel == i ||
                                 (sel == -1 && i == 0 && qty == 0),
-                            hasQty: (quantities[orderKey(view.item.id, view.variants[i].id)] ?? 0) > 0,
+                            qtyKey: orderKey(view.item.id, view.variants[i].id),
                             onTap: () => ref
                                 .read(variantSelectionProvider.notifier)
                                 .select(view.item.id, i),
@@ -153,11 +154,13 @@ class MenuItemCard extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              t.toUpperCase(),
+                              // Uppercasing + letterSpacing break Arabic
+                              // joining — Latin styling only.
+                              locale == 'ar' ? t : t.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                letterSpacing: 0.08 * 10,
+                                letterSpacing: locale == 'ar' ? 0 : 0.08 * 10,
                                 color: theme.scaffoldBackgroundColor,
                               ),
                             ),
@@ -203,13 +206,13 @@ class _PlaceholderIcon extends StatelessWidget {
   }
 }
 
-class _VariantChip extends StatelessWidget {
+class _VariantChip extends ConsumerWidget {
   const _VariantChip({
     required this.label,
     required this.price,
     required this.locale,
     required this.selected,
-    required this.hasQty,
+    required this.qtyKey,
     required this.onTap,
   });
 
@@ -217,12 +220,15 @@ class _VariantChip extends StatelessWidget {
   final double price;
   final String locale;
   final bool selected;
-  final bool hasQty;
+  final String qtyKey;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Per-chip subscription: other variants' quantities don't rebuild us.
+    final hasQty =
+        ref.watch(quantitiesProvider.select((m) => (m[qtyKey] ?? 0) > 0));
     final priceStr = priceWithCurrency(price, locale);
     return GestureDetector(
       onTap: onTap,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/db/app_db.dart';
 import '../../core/db/db_provider.dart';
+import '../../core/i18n/locale_controller.dart';
 import '../../features/menu/menu_tenant_id.dart';
 import 'data/admin_writes.dart';
 import 'widgets/save_and_push.dart';
@@ -40,14 +41,15 @@ class CategoriesAdminPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cats = ref.watch(_allCategoriesProvider).value ?? [];
     final trs = ref.watch(_categoryTranslationsProvider).value ?? [];
+    final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
     return Scaffold(
-      appBar: AppBar(title: const Text('Categories')),
+      appBar: AppBar(title: Text(ar ? 'الأصناف' : 'Categories')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openDialog(context, ref),
         child: const Icon(Icons.add),
       ),
       body: cats.isEmpty
-          ? const Center(child: Text('No categories — add one'))
+          ? Center(child: Text(ar ? 'لا أصناف — أضف واحدًا' : 'No categories — add one'))
           : ReorderableListView.builder(
               padding: const EdgeInsets.all(8),
               itemCount: cats.length,
@@ -99,19 +101,22 @@ class CategoriesAdminPage extends ConsumerWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, Category c) async {
+    final ar = ref.read(localeControllerProvider).languageCode == 'ar';
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Delete "${c.name}"?'),
-        content: const Text('Its items are hidden too. Syncs to web.'),
+        title: Text(ar ? 'حذف "${c.name}"؟' : 'Delete "${c.name}"?'),
+        content: Text(ar
+            ? 'أطباقه تُخفى أيضًا. تتم المزامنة مع الويب.'
+            : 'Its items are hidden too. Syncs to web.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(ar ? 'إلغاء' : 'Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(ar ? 'حذف' : 'Delete'),
           ),
         ],
       ),
@@ -127,6 +132,7 @@ class CategoriesAdminPage extends ConsumerWidget {
 
   Future<void> _openDialog(BuildContext context, WidgetRef ref,
       {Category? existing}) async {
+    final ar = ref.read(localeControllerProvider).languageCode == 'ar';
     final trs = ref.read(_categoryTranslationsProvider).value ?? [];
     final name = TextEditingController(text: existing?.name ?? '');
     final enName = TextEditingController(
@@ -140,44 +146,46 @@ class CategoriesAdminPage extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: Text(existing == null ? 'New category' : 'Edit category'),
+          title: Text(existing == null
+              ? (ar ? 'صنف جديد' : 'New category')
+              : (ar ? 'تعديل الصنف' : 'Edit category')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name (Arabic)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: ar ? 'الاسم (بالعربية)' : 'Name (Arabic)',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: enName,
-                  decoration: const InputDecoration(
-                    labelText: 'Name (English)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: ar ? 'الاسم (بالإنجليزية)' : 'Name (English)',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: slug,
-                  decoration: const InputDecoration(
-                    labelText: 'Slug (auto if empty)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: ar ? 'الرابط (تلقائي إن تُرك فارغًا)' : 'Slug (auto if empty)',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: desc,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: ar ? 'الوصف (اختياري)' : 'Description (optional)',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 SwitchListTile(
-                  title: const Text('Visible'),
+                  title: Text(ar ? 'ظاهر' : 'Visible'),
                   value: active,
                   onChanged: (v) => setState(() => active = v),
                 ),
@@ -187,13 +195,13 @@ class CategoriesAdminPage extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(ar ? 'إلغاء' : 'Cancel'),
             ),
             FilledButton(
               onPressed: name.text.trim().isEmpty
                   ? null
                   : () => Navigator.pop(ctx, true),
-              child: const Text('Save'),
+              child: Text(ar ? 'حفظ' : 'Save'),
             ),
           ],
         ),

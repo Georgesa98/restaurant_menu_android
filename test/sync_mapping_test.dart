@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restaurant_menu_android/core/db/app_db.dart';
 import 'package:restaurant_menu_android/core/sync/sync_engine.dart';
+import 'package:restaurant_menu_android/core/theme/tenant_theme_tokens.dart';
 
 void main() {
   group('push JSON', () {
@@ -80,7 +81,7 @@ void main() {
     });
 
     test('customCss never reaches tokens', () {
-      final tokens = tokensFromServerTenant({
+      final tokens = TenantThemeTokens.fromJson({
         'primaryColor': '#111111',
         'customCss': '.menu-item{display:none}',
       });

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../config/tenant_config.dart';
 import '../db/app_db.dart';
-import '../theme/tenant_theme_tokens.dart';
 
 /// Result of a sync step (docs/PLAN.md §7/§18).
 enum SyncStatus { ok, fullRepulled, offline, unauthorized, serverError }
@@ -120,9 +119,6 @@ MenuItemsCompanion parseServerItem(
   );
 }
 
-TenantThemeTokens tokensFromServerTenant(Map<String, dynamic> j) =>
-    TenantThemeTokens.fromJson(j);
-
 // ---------- engine ----------
 
 final syncEngineProvider = Provider<SyncEngine>((ref) {
@@ -171,7 +167,9 @@ class SyncEngine {
       e.type == DioExceptionType.connectionError ||
       e.type == DioExceptionType.connectionTimeout ||
       e.type == DioExceptionType.receiveTimeout ||
-      e.type == DioExceptionType.sendTimeout;
+      e.type == DioExceptionType.sendTimeout ||
+      // SocketException / HandshakeException surface as `unknown` on offline.
+      e.type == DioExceptionType.unknown;
 
   /// Push local dirty rows, then pull. 410 stale cursor triggers one full re-pull.
   Future<SyncOutcome> syncNow() async {
@@ -214,8 +212,9 @@ class SyncEngine {
         pulledItems: applied.$2,
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 410) {
-        // Stale cursor: one full re-pull (docs/PLAN.md §18).
+      if (e.response?.statusCode == 410 && !full) {
+        // Stale cursor: one full re-pull (docs/PLAN.md §18). Guarded by
+        // `!full` so a persistently-410 backend can't recurse forever.
         final repulled = await pull(full: true);
         return SyncOutcome(
           SyncStatus.fullRepulled,
@@ -356,13 +355,7 @@ class SyncEngine {
         }
       }
 
-      await _db.into(_db.syncState).insert(
-            SyncStateCompanion.insert(
-              id: const Value(1),
-              lastPullAt: Value(serverTime),
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
+      await _saveCursor(pullAt: serverTime);
     });
 
     await _onTenantResolved?.call(tenantId);
@@ -428,15 +421,29 @@ class SyncEngine {
 
     final catIds = dirtyCats.map((c) => c.id).toList();
     final itemIds = dirtyItems.map((i) => i.id).toList();
-    final catTrs = await (_db.select(_db.categoryTranslations)
-          ..where((t) => t.categoryId.isIn(catIds)))
-        .get();
-    final itemTrs = await (_db.select(_db.menuItemTranslations)
-          ..where((t) => t.menuItemId.isIn(itemIds)))
-        .get();
-    final variants = await (_db.select(_db.menuItemVariants)
-          ..where((v) => v.menuItemId.isIn(itemIds)))
-        .get();
+    // `isIn([])` is version-dependent — skip the query when there's nothing
+    // to fetch instead of relying on empty-set semantics.
+    final catTrs = catIds.isEmpty
+        ? const <CategoryTranslation>[]
+        : await (_db.select(_db.categoryTranslations)
+              ..where((t) => t.categoryId.isIn(catIds)))
+            .get();
+    final itemTrs = itemIds.isEmpty
+        ? const <MenuItemTranslation>[]
+        : await (_db.select(_db.menuItemTranslations)
+              ..where((t) => t.menuItemId.isIn(itemIds)))
+            .get();
+    final variants = itemIds.isEmpty
+        ? const <MenuItemVariant>[]
+        : await (_db.select(_db.menuItemVariants)
+              ..where((v) => v.menuItemId.isIn(itemIds)))
+            .get();
+    // Tombstoned variants of dirty items: the server replaces the item's
+    // full variant set on accept, so their ids must be expressed.
+    final deletedVariantIds = [
+      for (final v in variants)
+        if (v.isDeleted) v.id,
+    ];
 
     try {
       final res = await _api.post('/api/sync/push', body: {
@@ -461,7 +468,7 @@ class SyncEngine {
         'deletes': {
           'categoryIds': dirtyCats.where((c) => c.isDeleted).map((c) => c.id).toList(),
           'itemIds': dirtyItems.where((i) => i.isDeleted).map((i) => i.id).toList(),
-          'variantIds': const <String>[],
+          'variantIds': deletedVariantIds,
         },
       });
 
@@ -473,6 +480,14 @@ class SyncEngine {
 
       await _db.transaction(() async {
         for (final id in (accepted['categoryIds'] as List? ?? []).cast<String>()) {
+          final local = await (_db.select(_db.categories)
+                ..where((c) => c.id.equals(id)))
+              .getSingleOrNull();
+          // Server accepted the delete: drop the tombstone locally.
+          if (local != null && local.isDeleted) {
+            await _deleteCategoryLocal(id);
+            continue;
+          }
           await (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
             CategoriesCompanion(dirty: const Value(false), updatedAt: Value(serverTime)),
           );
@@ -481,6 +496,13 @@ class SyncEngine {
               .write(const CategoryTranslationsCompanion(dirty: Value(false)));
         }
         for (final id in (accepted['itemIds'] as List? ?? []).cast<String>()) {
+          final local = await (_db.select(_db.menuItems)
+                ..where((i) => i.id.equals(id)))
+              .getSingleOrNull();
+          if (local != null && local.isDeleted) {
+            await _deleteItemLocal(id);
+            continue;
+          }
           await (_db.update(_db.menuItems)..where((i) => i.id.equals(id))).write(
             MenuItemsCompanion(dirty: const Value(false), updatedAt: Value(serverTime)),
           );
@@ -490,22 +512,87 @@ class SyncEngine {
           await (_db.update(_db.menuItemVariants)
                 ..where((v) => v.menuItemId.equals(id)))
               .write(const MenuItemVariantsCompanion(dirty: Value(false)));
+          // Server took the item's full variant set: drop local tombstones.
+          await (_db.delete(_db.menuItemVariants)
+                ..where((v) =>
+                    v.menuItemId.equals(id) & v.isDeleted.equals(true)))
+              .go();
         }
-        // Server-wins conflicts: apply returned rows over local edits.
+        // Server-wins conflicts: apply returned rows over local edits,
+        // replacing child sets wholesale like applyPull (translation/variant
+        // removals propagate) and clearing dirty on the whole subtree.
         for (final c in (conflicts['categories'] as List? ?? []).cast<Map<String, dynamic>>()) {
-          final tenantId = (c['tenantId'] as String?) ?? TenantConfig.current.tenantId;
+          final existing = await (_db.select(_db.categories)
+                ..where((t) => t.id.equals(c['id'] as String)))
+              .getSingleOrNull();
+          final tenantId = (c['tenantId'] as String?) ??
+              existing?.tenantId ??
+              TenantConfig.current.tenantId;
           await _db.into(_db.categories).insert(
                 parseServerCategory(c, tenantId),
                 mode: InsertMode.insertOrReplace,
               );
+          final id = c['id'] as String;
+          await (_db.delete(_db.categoryTranslations)
+                ..where((t) => t.categoryId.equals(id)))
+              .go();
+          for (final t in (c['translations'] as List? ?? []).cast<Map<String, dynamic>>()) {
+            await _db.into(_db.categoryTranslations).insert(
+                  CategoryTranslationsCompanion.insert(
+                    categoryId: id,
+                    locale: t['locale'] as String,
+                    name: t['name'] as String,
+                    description: Value(t['description'] as String?),
+                  ),
+                  mode: InsertMode.insertOrReplace,
+                );
+          }
           conflictCount++;
         }
         for (final j in (conflicts['items'] as List? ?? []).cast<Map<String, dynamic>>()) {
-          final tenantId = (j['tenantId'] as String?) ?? TenantConfig.current.tenantId;
+          final existing = await (_db.select(_db.menuItems)
+                ..where((t) => t.id.equals(j['id'] as String)))
+              .getSingleOrNull();
+          final tenantId = (j['tenantId'] as String?) ??
+              existing?.tenantId ??
+              TenantConfig.current.tenantId;
           await _db.into(_db.menuItems).insert(
                 parseServerItem(j, tenantId),
                 mode: InsertMode.insertOrReplace,
               );
+          final id = j['id'] as String;
+          await (_db.delete(_db.menuItemTranslations)
+                ..where((t) => t.menuItemId.equals(id)))
+              .go();
+          for (final t in (j['translations'] as List? ?? []).cast<Map<String, dynamic>>()) {
+            await _db.into(_db.menuItemTranslations).insert(
+                  MenuItemTranslationsCompanion.insert(
+                    menuItemId: id,
+                    locale: t['locale'] as String,
+                    name: t['name'] as String,
+                    description: Value(t['description'] as String?),
+                  ),
+                  mode: InsertMode.insertOrReplace,
+                );
+          }
+          await (_db.delete(_db.menuItemVariants)
+                ..where((v) => v.menuItemId.equals(id)))
+              .go();
+          var order = 0;
+          for (final v in (j['variants'] as List? ?? []).cast<Map<String, dynamic>>()) {
+            await _db.into(_db.menuItemVariants).insert(
+                  MenuItemVariantsCompanion.insert(
+                    id: v['id'] as String? ?? '$id-v$order',
+                    menuItemId: id,
+                    label: v['label'] as String? ?? '',
+                    labelEn: Value(v['labelEn'] as String? ?? ''),
+                    price: _toDouble(v['price']) ?? 0,
+                    sortOrder: Value((v['sortOrder'] as num?)?.toInt() ?? order),
+                  ),
+                  mode: InsertMode.insertOrReplace,
+                );
+            order++;
+          }
           conflictCount++;
         }
       });

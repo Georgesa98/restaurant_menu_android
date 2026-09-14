@@ -22,7 +22,7 @@ class MenuTenantId extends Notifier<String> {
   Future<void> _adoptStored() async {
     try {
       final stored =
-          await ref.read(secureStorageProvider).read(key: 'tenant_id');
+          await ref.read(secureStorageProvider).read(key: tenantIdKey);
       if (!ref.mounted) return;
       if (stored != null && stored.isNotEmpty && stored != state) {
         state = stored;

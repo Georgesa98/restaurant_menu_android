@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,6 +40,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/',
     refreshListenable: refresh,
+    // Kiosk-safe fallback: never show the debug error screen on a bad link.
+    errorBuilder: (context, state) => const _UnknownRoutePage(),
     redirect: (context, state) {
       final loggedIn =
           ref.read(authControllerProvider).status ==
@@ -95,3 +97,13 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Brand-safe 404 for bad deep links (kiosk must never show a stack trace).
+class _UnknownRoutePage extends StatelessWidget {
+  const _UnknownRoutePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MenuPage();
+  }
+}

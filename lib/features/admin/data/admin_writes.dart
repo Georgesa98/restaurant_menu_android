@@ -257,7 +257,7 @@ final adminWritesProvider =
 /// Tenant id for local writes: resolved uuid (post-pull/login) → baked id →
 /// demo seed id. Empty means "no tenant yet" (fresh non-demo install pre-sync).
 Future<String> resolveWriteTenantId(SecureStore store) async {
-  final stored = await store.read(key: 'tenant_id');
+  final stored = await store.read(key: tenantIdKey);
   if (stored?.isNotEmpty == true) return stored!;
   if (TenantConfig.current.tenantId.isNotEmpty) {
     return TenantConfig.current.tenantId;

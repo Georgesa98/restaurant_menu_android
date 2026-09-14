@@ -5,11 +5,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api/api_client.dart';
 import '../../core/db/app_db.dart';
 import '../../core/db/db_provider.dart';
+import '../../core/i18n/locale_controller.dart';
+import '../../features/menu/menu_format.dart';
 import '../../features/menu/menu_tenant_id.dart';
 import 'data/admin_writes.dart';
 import 'widgets/save_and_push.dart';
 
-final _itemsStreamProvider = StreamProvider.family<List<MenuItem>, String>(
+final _itemsStreamProvider =
+    StreamProvider.autoDispose.family<List<MenuItem>, String>(
   (ref, categoryId) async* {
     await ref.watch(dbReadyProvider.future);
     yield* ref.watch(appDbProvider).watchAllItems(categoryId);
@@ -68,9 +71,10 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
         : ref.watch(_itemsStreamProvider(effectiveCat)).value ?? [];
     final trs = ref.watch(_itemTranslationsProvider).value ?? [];
     final vars = ref.watch(_variantsProvider).value ?? [];
+    final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Menu items')),
+      appBar: AppBar(title: Text(ar ? 'أصناف القائمة' : 'Menu items')),
       floatingActionButton: effectiveCat == null
           ? null
           : FloatingActionButton(
@@ -84,9 +88,9 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
               padding: const EdgeInsets.all(8),
               child: DropdownButtonFormField<String>(
                 initialValue: effectiveCat,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: ar ? 'الصنف' : 'Category',
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 items: [
@@ -98,7 +102,9 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
             ),
           Expanded(
             child: items.isEmpty
-                ? const Center(child: Text('No items — add one'))
+                ? Center(
+                    child: Text(
+                        ar ? 'لا أطباق — أضف واحدًا' : 'No items — add one'))
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.all(8),
                     itemCount: items.length,
@@ -122,8 +128,10 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                         subtitle: Text(
                           [
                             if ((_enName(trs, item.id)) != null) _enName(trs, item.id)!,
-                            if (vcount > 0) '$vcount variants',
-                            if (item.basePrice != null) '${item.basePrice}',
+                            if (vcount > 0)
+                              (ar ? '$vcount خيارات' : '$vcount variants'),
+                            if (item.basePrice != null)
+                              formatPrice(item.basePrice),
                           ].join(' • '),
                         ),
                         leading: const Icon(Icons.drag_handle),
@@ -166,19 +174,22 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, MenuItem item) async {
+    final ar = ref.read(localeControllerProvider).languageCode == 'ar';
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Delete "${item.name}"?'),
-        content: const Text('It disappears from the kiosk. Syncs to web.'),
+        title: Text(ar ? 'حذف "${item.name}"؟' : 'Delete "${item.name}"?'),
+        content: Text(ar
+            ? 'يختفي من شاشة العرض. تتم المزامنة مع الويب.'
+            : 'It disappears from the kiosk. Syncs to web.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(ar ? 'إلغاء' : 'Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(ar ? 'حذف' : 'Delete'),
           ),
         ],
       ),
@@ -198,6 +209,7 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
     String categoryId, {
     MenuItem? existing,
   }) async {
+    final ar = ref.read(localeControllerProvider).languageCode == 'ar';
     final trs = ref.read(_itemTranslationsProvider).value ?? [];
     final vars = ref.read(_variantsProvider).value ?? [];
     final name = TextEditingController(text: existing?.name ?? '');
@@ -239,8 +251,10 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
       } catch (_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Upload needs internet — URL unchanged'),
+            SnackBar(
+              content: Text(ar
+                  ? 'الرفع يحتاج إنترنت — الرابط لم يتغير'
+                  : 'Upload needs internet — URL unchanged'),
             ),
           );
         }
@@ -253,7 +267,9 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: Text(existing == null ? 'New item' : 'Edit item'),
+          title: Text(existing == null
+              ? (ar ? 'طبق جديد' : 'New item')
+              : (ar ? 'تعديل الطبق' : 'Edit item')),
           content: SizedBox(
             width: 480,
             child: SingleChildScrollView(
@@ -262,26 +278,26 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                 children: [
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name (Arabic)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: ar ? 'الاسم (بالعربية)' : 'Name (Arabic)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: enName,
-                    decoration: const InputDecoration(
-                      labelText: 'Name (English)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: ar ? 'الاسم (بالإنجليزية)' : 'Name (English)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: desc,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: ar ? 'الوصف' : 'Description',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -289,17 +305,20 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                     controller: price,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Base price (hidden when variants exist)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: ar
+                          ? 'السعر الأساسي (يُخفى عند وجود خيارات)'
+                          : 'Base price (hidden when variants exist)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: tags,
-                    decoration: const InputDecoration(
-                      labelText: 'Tags (comma separated)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText:
+                          ar ? 'الوسوم (مفصولة بفواصل)' : 'Tags (comma separated)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -308,9 +327,9 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                       Expanded(
                         child: TextField(
                           controller: imageUrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Photo URL (4:3)',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: ar ? 'رابط الصورة (4:3)' : 'Photo URL (4:3)',
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -322,14 +341,14 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : IconButton(
-                              tooltip: 'Upload photo',
+                              tooltip: ar ? 'رفع صورة' : 'Upload photo',
                               icon: const Icon(Icons.upload),
                               onPressed: () => pickAndUpload(setState),
                             ),
                     ],
                   ),
                   SwitchListTile(
-                    title: const Text('Available'),
+                    title: Text(ar ? 'متوفر' : 'Available'),
                     value: available,
                     onChanged: (v) => setState(() => available = v),
                   ),
@@ -337,10 +356,10 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Variants (optional)'),
+                      Text(ar ? 'الخيارات (اختياري)' : 'Variants (optional)'),
                       TextButton.icon(
                         icon: const Icon(Icons.add),
-                        label: const Text('Add'),
+                        label: Text(ar ? 'إضافة' : 'Add'),
                         onPressed: () => setState(
                           () => variantRows.add(_VariantRow.empty()),
                         ),
@@ -351,6 +370,7 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                     _VariantEditor(
                       key: ValueKey('variant-$i'),
                       row: variantRows[i],
+                      ar: ar,
                       onRemove: () =>
                           setState(() => variantRows.removeAt(i)),
                     ),
@@ -361,12 +381,12 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(ar ? 'إلغاء' : 'Cancel'),
             ),
             FilledButton(
               onPressed:
                   name.text.trim().isEmpty ? null : () => Navigator.pop(ctx, true),
-              child: const Text('Save'),
+              child: Text(ar ? 'حفظ' : 'Save'),
             ),
           ],
         ),
@@ -420,9 +440,11 @@ class _VariantRow {
 }
 
 class _VariantEditor extends StatelessWidget {
-  const _VariantEditor({super.key, required this.row, required this.onRemove});
+  const _VariantEditor(
+      {super.key, required this.row, required this.ar, required this.onRemove});
 
   final _VariantRow row;
+  final bool ar;
   final VoidCallback onRemove;
 
   @override
@@ -435,9 +457,9 @@ class _VariantEditor extends StatelessWidget {
             flex: 3,
             child: TextField(
               controller: row.label,
-              decoration: const InputDecoration(
-                labelText: 'Label (AR)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: ar ? 'التسمية (عربي)' : 'Label (AR)',
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -447,9 +469,9 @@ class _VariantEditor extends StatelessWidget {
             flex: 3,
             child: TextField(
               controller: row.labelEn,
-              decoration: const InputDecoration(
-                labelText: 'Label (EN)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: ar ? 'التسمية (إنجليزي)' : 'Label (EN)',
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -461,9 +483,9 @@ class _VariantEditor extends StatelessWidget {
               controller: row.price,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Price',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: ar ? 'السعر' : 'Price',
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),

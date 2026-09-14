@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restaurant_menu_android/core/api/api_client.dart';
@@ -233,5 +234,147 @@ void main() {
     final engine = SyncEngine(db, testClient(stubDio({})));
     final outcome = await engine.pull(full: true);
     expect(outcome.status, SyncStatus.offline);
+  });
+
+  test('push expresses tombstoned variant ids and drops them on accept', () async {
+    // Seed one dirty item with a live + a tombstoned variant.
+    await db.into(db.categories).insert(
+          CategoriesCompanion.insert(
+            id: 'c1',
+            tenantId: 'tenant-1',
+            name: 'Grill',
+            slug: 'grill',
+            updatedAt: '2026-09-08T00:00:00.000Z',
+          ),
+        );
+    await db.into(db.menuItems).insert(
+          MenuItemsCompanion.insert(
+            id: 'i1',
+            tenantId: 'tenant-1',
+            categoryId: 'c1',
+            name: 'كفتة',
+            updatedAt: '2026-09-08T00:00:00.000Z',
+            dirty: const Value(true),
+          ),
+        );
+    for (final (id, deleted) in [('v1', false), ('v2', true)]) {
+      await db.into(db.menuItemVariants).insert(
+            MenuItemVariantsCompanion.insert(
+              id: id,
+              menuItemId: 'i1',
+              label: 'x',
+              price: 10,
+              isDeleted: Value(deleted),
+              dirty: const Value(true),
+            ),
+          );
+    }
+    Map<String, dynamic>? seenBody;
+    final dio = Dio();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          seenBody = Map<String, dynamic>.from(options.data as Map);
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'serverTime': '2026-09-08T05:00:00.000Z',
+                'accepted': {
+                  'categoryIds': <String>[],
+                  'itemIds': ['i1'],
+                },
+                'conflicts': <String, dynamic>{},
+              },
+            ),
+          );
+        },
+      ),
+    );
+    final outcome = await SyncEngine(db, testClient(dio)).push();
+
+    expect(outcome.status, SyncStatus.ok);
+    expect(outcome.pushed, 1);
+    expect(
+      (seenBody!['deletes'] as Map)['variantIds'],
+      contains('v2'),
+    );
+    // Tombstone dropped, survivor kept clean.
+    expect(
+      await (db.select(db.menuItemVariants)
+            ..where((v) => v.id.equals('v2')))
+          .getSingleOrNull(),
+      isNull,
+    );
+    final v1 = await (db.select(db.menuItemVariants)
+          ..where((v) => v.id.equals('v1')))
+        .getSingle();
+    expect(v1.dirty, isFalse);
+  });
+
+  test('push applies server-wins conflict children wholesale', () async {
+    await db.into(db.categories).insert(
+          CategoriesCompanion.insert(
+            id: 'c1',
+            tenantId: 'tenant-1',
+            name: 'Local',
+            slug: 'grill',
+            updatedAt: '2026-09-08T00:00:00.000Z',
+            dirty: const Value(true),
+          ),
+        );
+    await db.into(db.categoryTranslations).insert(
+          CategoryTranslationsCompanion.insert(
+            categoryId: 'c1',
+            locale: 'en',
+            name: 'Local EN',
+            dirty: const Value(true),
+          ),
+        );
+    final dio = Dio();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'serverTime': '2026-09-08T06:00:00.000Z',
+                'accepted': <String, dynamic>{},
+                'conflicts': {
+                  'categories': [
+                    {
+                      'id': 'c1',
+                      'tenantId': 'tenant-1',
+                      'name': 'Server',
+                      'slug': 'grill',
+                      'updatedAt': '2026-09-08T06:00:00.000Z',
+                      'translations': [
+                        {'locale': 'en', 'name': 'Server EN'},
+                      ],
+                    },
+                  ],
+                  'items': <Map<String, dynamic>>[],
+                },
+              },
+            ),
+          );
+        },
+      ),
+    );
+    final outcome = await SyncEngine(db, testClient(dio)).push();
+
+    expect(outcome.status, SyncStatus.ok);
+    expect(outcome.conflicts, 1);
+    final cat =
+        await (db.select(db.categories)..where((c) => c.id.equals('c1')))
+            .getSingle();
+    expect(cat.name, 'Server');
+    expect(cat.dirty, isFalse);
+    final trs = await (db.select(db.categoryTranslations)).get();
+    expect(trs.single.name, 'Server EN');
+    expect(trs.single.dirty, isFalse);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/i18n/locale_controller.dart';
 import 'auth/admin_auth.dart';
 
 /// Email + password via better-auth. First login requires internet (PLAN §8).
@@ -38,15 +39,16 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
     // Kiosk consistency: system back is inert here too; the AppBar
     // back arrow is the way back to the menu.
     return PopScope(
       canPop: false,
       child: Scaffold(
       appBar: AppBar(
-        title: const Text('Admin login'),
+        title: Text(ar ? 'دخول الإدارة' : 'Admin login'),
         leading: IconButton(
-          tooltip: 'Back to menu',
+          tooltip: ar ? 'عودة إلى القائمة' : 'Back to menu',
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
@@ -63,9 +65,9 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: ar ? 'البريد الإلكتروني' : 'Email',
+                    border: const OutlineInputBorder(),
                   ),
                   onSubmitted: (_) => _submit(),
                 ),
@@ -75,7 +77,7 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
                   obscureText: _obscure,
                   autofillHints: const [AutofillHints.password],
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: ar ? 'كلمة المرور' : 'Password',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -105,7 +107,7 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Log in'),
+                      : Text(ar ? 'دخول' : 'Log in'),
                 ),
               ],
             ),

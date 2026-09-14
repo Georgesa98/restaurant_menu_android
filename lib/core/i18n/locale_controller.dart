@@ -27,7 +27,3 @@ class LocaleController extends Notifier<Locale> {
 
 final localeControllerProvider =
     NotifierProvider<LocaleController, Locale>(LocaleController.new);
-
-final isRtlProvider = Provider<bool>(
-  (ref) => ref.watch(localeControllerProvider).languageCode == 'ar',
-);

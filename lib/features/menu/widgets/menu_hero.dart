@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,19 +8,17 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/tenant_config.dart';
 import '../../../core/db/app_db.dart';
 import '../../../core/i18n/locale_controller.dart';
-import '../../../core/sync/image_prefetch.dart';
 import '../../../core/theme/web_palette.dart';
+import '../../kiosk/attract_loop.dart' show attractBrandFilesProvider;
 
 /// Pinned brand files (logo/cover), if the pull has pinned them yet.
-final _brandFilesProvider =
-    FutureProvider<(File?, File?)>((ref) async {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  final prefetch = ImagePrefetch(Dio(), prefs);
-  return (
-    await prefetch.pinnedBrand('logo'),
-    await prefetch.pinnedBrand('cover'),
-  );
-});
+/// Shared with the attract loop so one override covers both in tests.
+FutureProvider<(File?, File?)> _brandFilesProvider = FutureProvider(
+  (ref) async {
+    final brand = await ref.watch(attractBrandFilesProvider.future);
+    return (brand.logo, brand.cover);
+  },
+);
 
 /// Web hero (order-menu.tsx header): eyebrow + script title (or logo),
 /// tagline, address/phone. 5-tap on the title opens admin login.
@@ -62,7 +59,8 @@ class MenuHero extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                letterSpacing: 0.35 * 10,
+                // letterSpacing breaks Arabic joining — Latin only.
+                letterSpacing: locale == 'ar' ? 0 : 0.35 * 10,
                 color: theme.colorScheme.primary,
               ),
             ),
@@ -73,6 +71,8 @@ class MenuHero extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: WebPalette.scriptFont,
+                  // AlexBrush is Latin-only; Arabic falls back to Cairo.
+                  fontFamilyFallback: const ['Cairo'],
                   fontSize: 48,
                   height: 1.0,
                   color: theme.colorScheme.primary,

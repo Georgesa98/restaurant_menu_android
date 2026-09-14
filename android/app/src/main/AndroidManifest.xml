@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release builds only get the permissions declared here (Flutter
+         auto-adds INTERNET for debug builds only). Without these, a
+         sideloaded release APK has no network: every API call fails and
+         admin login reports a misleading "network error". -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
         android:label="restaurant_menu_android"
         android:name="${applicationName}"

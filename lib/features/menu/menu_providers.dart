@@ -46,7 +46,8 @@ final _categoryTranslationsStreamProvider =
     StreamProvider<List<CategoryTranslation>>(
   (ref) => _ready(ref, (r) => r.watchCategoryTranslations()),
 );
-final _itemsStreamProvider = StreamProvider.family<List<MenuItem>, String>(
+final _itemsStreamProvider =
+    StreamProvider.autoDispose.family<List<MenuItem>, String>(
   (ref, categoryId) => _ready(ref, (r) => r.watchItems(categoryId)),
 );
 final _itemTranslationsStreamProvider =
@@ -84,22 +85,12 @@ final categoryViewsProvider = Provider<List<CategoryView>>((ref) {
 });
 
 final menuItemViewsProvider =
-    Provider.family<List<MenuItemView>, String>((ref, categoryId) {
+    Provider.autoDispose.family<List<MenuItemView>, String>((ref, categoryId) {
   final locale = ref.watch(localeControllerProvider).languageCode;
   final items = ref.watch(_itemsStreamProvider(categoryId)).value ?? [];
   final trs = ref.watch(_itemTranslationsStreamProvider).value ?? [];
   final vars = ref.watch(_variantsStreamProvider).value ?? [];
-  final query = ref.watch(searchQueryProvider).trim();
-  final views = [for (final i in items) _toView(i, trs, vars, locale)];
-  return [
-    for (final v in views)
-      if (matchesQuery(
-        query: query,
-        name: v.item.name,
-        translatedName: v.name == v.item.name ? null : v.name,
-      ))
-        v,
-  ];
+  return [for (final i in items) _toView(i, trs, vars, locale)];
 });
 
 MenuItemView _toView(
@@ -132,7 +123,7 @@ MenuItemView _toView(
 }
 
 final categoryViewByIdProvider =
-    Provider.family<CategoryView?, String>((ref, id) {
+    Provider.autoDispose.family<CategoryView?, String>((ref, id) {
   final all = ref.watch(categoryViewsProvider);
   for (final v in all) {
     if (v.category.id == id) return v;
@@ -140,33 +131,12 @@ final categoryViewByIdProvider =
   return null;
 });
 
-/// Raw visible-item count per category (ignores search — search UI removed).
-final categoryItemCountProvider = Provider.family<int, String>((ref, id) {
+/// Raw visible-item count per category.
+final categoryItemCountProvider =
+    Provider.autoDispose.family<int, String>((ref, id) {
   final items = ref.watch(_itemsStreamProvider(id)).value ?? [];
   return items.length;
 });
-
-class _Selection extends Notifier<String?> {
-  @override
-  String? build() => null;
-  void select(String? id) => state = id;
-}
-
-final selectedCategoryIdProvider =
-    NotifierProvider<_Selection, String?>(_Selection.new);
-
-/// Web parity: null selection = "All" (every section stacked).
-/// Tapping a tab filters to one section; "All" tab clears back to null.
-final showAllProvider =
-    Provider<bool>((ref) => ref.watch(selectedCategoryIdProvider) == null);
-
-class _Search extends Notifier<String> {
-  @override
-  String build() => '';
-  void set(String value) => state = value;
-}
-
-final searchQueryProvider = NotifierProvider<_Search, String>(_Search.new);
 
 class _VariantSelection extends Notifier<Map<String, int>> {
   @override

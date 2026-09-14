@@ -18,10 +18,6 @@ class MenuSection extends ConsumerWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final views = ref.watch(menuItemViewsProvider(view.category.id));
-    final query = ref.watch(searchQueryProvider).trim();
-    // menuItemViewsProvider already filters by search; hide empty sections
-    // in All mode only when a query is active.
-    if (views.isEmpty && query.isNotEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 48),

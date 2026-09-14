@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurant_menu_android/core/i18n/locale_controller.dart';
+import 'package:restaurant_menu_android/features/kiosk/attract_loop.dart';
 import 'package:restaurant_menu_android/features/menu/widgets/menu_hero.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,7 +32,14 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          // Skip path_provider (no test implementation): brand files are
+          // decoration, and the real lookup's timeout would outlive the test.
+          attractBrandFilesProvider.overrideWith(
+            (ref) async => (logo: null as File?, cover: null as File?),
+          ),
+        ],
         child: MaterialApp.router(routerConfig: router),
       ),
     );

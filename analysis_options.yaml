@@ -4,3 +4,9 @@ analyzer:
   exclude:
     - build/**
     - android/**
+
+linter:
+  rules:
+    # Production uses debugPrint (stripped in release); a stray print()
+    # would leak field diagnostics into release logs.
+    avoid_print: true

@@ -52,10 +52,19 @@ class _AdminShellState extends ConsumerState<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) => _arm(),
-      child: widget.child,
+    // System back out of admin must re-lock: the idle timer is cancelled on
+    // dispose, so without this a back-escape would stay unlocked forever and
+    // re-entry would skip the password via the router redirect.
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) ref.read(adminUnlockedProvider.notifier).lock();
+      },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _arm(),
+        child: widget.child,
+      ),
     );
   }
 }

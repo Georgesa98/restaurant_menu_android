@@ -476,12 +476,24 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
 - **Tests**: 10 new (mapping, full/delta/410/tombstone/offline pulls) — 20/20 green,
   analyze clean. Live-API integration pending deploy (other track).
 
-## 21. P3 — admin auth + CRUD + push (shipped 2026-09-08, login vs live API untested)
+## 21. P3 — admin auth + CRUD + push (shipped 2026-09-08; 308 fix 2026-09-14)
 
-- **Auth** (`features/admin/auth`): better-auth email/password (defensive token/user
-  parsing — shape confirmed on first live login), cached session w/ offline grace,
-  401 → wipe + force re-login. Guarded `/admin/*` routes (unknown → let through,
-  unauthenticated → `/admin/login`).
+- **Auth** (`features/admin/auth`): better-auth email/password (contract confirmed
+  from better-auth 1.6 source + live curl 2026-09-14: slashless → `308` to
+  slashed, slashed wrong-creds → `401 INVALID_EMAIL_OR_PASSWORD`; success
+  `{redirect, token, user}` with top-level `token` + `user`, malformed `400`;
+  defensive parser already matches; **first live login confirmed working
+  2026-09-14**), cached session w/
+  offline grace, 401 → wipe + force re-login. Guarded `/admin/*` routes
+  (unknown → let through, unauthenticated → `/admin/login`).
+- **308 trailing-slash fix (2026-09-14)**: Next.js `trailingSlash: true`
+  308-redirects slashless `POST /api/auth/sign-in/email`; dart:io won't
+  auto-follow POST 308. App posts the slashed `signInEmailPath` const
+  directly (server strips before better-auth), plus `RedirectFollowInterceptor`
+  (max 3 hops, loop-guarded, 307/308 preserve method+body, HTTPS→HTTP refused)
+  protecting login/sync/upload. Surfaced 3xx → "moved unexpectedly (308)".
+  Tests: 308→200 follow w/ body preserved, downgrade refusal, loop guard,
+  3xx mapping — in `test/admin_login_error_test.dart`.
 - **Writes** (`features/admin/data/admin_writes.dart`): every write stamps local
   `updatedAt` + `dirty`; deletes flag (category cascades to items); variant replace
   tombstones old set; offline uuids + slugify; `resolveWriteTenantId` (resolved →
@@ -562,3 +574,58 @@ fixed brand neutrals, `customCss` still never read).
 - **Login screen**: AppBar back arrow → kiosk; system back inert (kiosk
   consistency via `PopScope`). No more dead-end.
 - **Tests**: hotspot fires/early-lift/custom-hold — 42/42 green, analyze clean.
+
+## 27. Dead-code + best-practices audit (shipped 2026-09-14)
+
+Six parallel sweeps (dead code, Riverpod, networking, DB/sync, UI/i18n/routing,
+tests/tooling). Executed in `docs/PLAN.md` order below; deferred items need a
+product call or a schema migration (v2) and are listed as such.
+
+- **P0 dead code removed**: `CategoryTabBar` + `selectedCategoryId`/`showAll`/
+  `searchQuery` providers (search UI was already gone; section filter simplified),
+  `priceLabel` + `matchesQuery` (+ their test groups), `isRtlProvider`,
+  `pinnedFile`, `tokensFromServerTenant` (callers use `fromJson`), dark-mode
+  branch of `toThemeData` (kiosk is light-only), `AuthState.tenantId`
+  (write-only), `_StepBtn` de-Consumered, `connectivity_plus` + `workmanager`
+  deps (zero imports), `.env` dropped from bundled assets (dev-only file).
+  Kept `visibleCategories/visibleItems` as the tests' query source of truth.
+- **P1 sync correctness**: demo seed matches by slug (no post-pull duplicate
+  menu), pull merges cursors via `_saveCursor` (push watermark + pending kept),
+  410 retries once max, push sends `variantIds` tombstones + drops them on
+  accept, accepted deletes hard-delete locally, server-wins conflicts replace
+  child sets wholesale (translations/variants propagate, dirty cleared),
+  `isIn([])` guarded, `_isOffline` covers `unknown` (SocketException/TLS).
+- **P1 auth/networking**: `clearSession` wipes `tenant_id` too (no cross-tenant
+  header bleed); single `tenantIdKey` const; `forceRelogin` wired into
+  `savePushAndToast` on 401 (was dead — expiry now locks + routes to login);
+  logout double-lock removed; redirect interceptor strips `Authorization`
+  cross-host, preserves `?since=` on path-only Locations, refuses
+  multipart-redirect resends, drops content-type on POST→GET, and rejects
+  HTTPS→HTTP downgrades responseless (dead branch in `loginErrorMessage` live).
+- **P2 Riverpod**: `autoDispose` on item/view/count families; `dio.close` on
+  provider dispose; `select()` on admin email, card variant-selection,
+  per-card and per-chip quantities (cards no longer rebuild on any stepper).
+- **P3 router/theme/i18n**: kiosk-safe `errorBuilder` (bad links → menu, never
+  a stack trace); `AdminShell` locks on system-back pop (idle timer is gone on
+  dispose, so back-escapes used to stay unlocked); `parsePx` clamps negatives/
+  absurd values; AlexBrush titles fall back to Cairo; letterSpacing gated to
+  Latin (eyebrows, tag pills, ADD pill); `menu_hero` brand provider got the
+  same hang-guard as the attract loop.
+- **P4 tests/tooling**: push tombstone + conflict-children tests
+  (`sync_pull_test`), theme-parser tests (`tenant_theme_mapper_test`),
+  `avoid_print` lint gate, `build_tenant.sh` comment matches the single-
+  `applicationId` reality (§22).
+- **Admin Arabic parity (2026-09-14)**: every admin surface is bilingual via
+  the kiosk locale (hub, login, categories/items lists + dialogs + delete
+  confirms, variant editor, upload/toast snackbars, sync status lines,
+  `loginErrorMessage`/`forceRelogin`/unexpected-response via a `locale` param
+  defaulting to English). Numbers stay Latin digits (`formatPrice` also fixed
+  the admin price subtitle); letterSpacing/uppercasing already Latin-gated.
+  Tests: AR mapping group in `test/admin_login_error_test.dart`.
+- **Deferred (needs decision/migration)**: `DeviceAuth` table + `pendingCount`
+  reads + write-only tenant columns (schema change → v2 migration, still unwired
+  index/FK plan); `Tenant.updatedAt`/currency; per-tenant `applicationId` +
+  release signing; `orderEntries`/attract snapshot staleness after sync (needs
+  invalidate-on-pull); shared dish placeholder + SliverGrid virtualization;
+  `SyncScheduler`/`uploadDishPhoto`/`TenantConfig` coverage; `save_and_push`
+  fullRepulled message parity.

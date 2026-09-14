@@ -48,7 +48,7 @@ Future<void> main() async {
             onTenantResolved: (id) async {
               await ref
                   .read(secureStorageProvider)
-                  .write(key: 'tenant_id', value: id);
+                  .write(key: tenantIdKey, value: id);
               // Kiosk/admin reads follow the server uuid from here on.
               ref.read(menuTenantIdProvider.notifier).adopt(id);
             },

@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Build one sideloadable APK per tenant with the tenant id baked in.
 # Usage: tool/build_tenant.sh <slug> [TENANT_ID] [TENANT_NAME] [MENU_API_URL]
-#   slug        : tenants/<slug>/ asset folder + applicationId suffix
+#   slug        : tenants/<slug>/ asset folder
 #   TENANT_ID   : web Tenant.id uuid (may be empty; resolved by slug on first pull)
 #   TENANT_NAME : display name fallback
 #   MENU_API_URL: server base url (defaults to production)
 # NOTE: explicit --dart-define values win over any bundled dev `.env`
 # (see TenantConfig), so release builds are unaffected by local .env files.
+# KNOWN LIMIT (docs/PLAN.md §22): single applicationId for all tenants
+# (no flavors yet) — one tenant per device. Don't add per-slug suffixes
+# here without adding productFlavors in android/app/build.gradle.kts.
 set -euo pipefail
 
 SLUG="${1:?usage: tool/build_tenant.sh <slug> [TENANT_ID] [TENANT_NAME] [MENU_API_URL]}"

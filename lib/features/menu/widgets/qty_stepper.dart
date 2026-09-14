@@ -21,6 +21,7 @@ class QtyStepper extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final latin = Localizations.localeOf(context).languageCode != 'ar';
     Future<void> bump(int delta) =>
         ref.read(quantitiesProvider.notifier).setQuantity(qtyKey, delta);
 
@@ -44,11 +45,11 @@ class QtyStepper extends ConsumerWidget {
                 Icon(Icons.add, size: 14, color: theme.scaffoldBackgroundColor),
                 const SizedBox(width: 4),
                 Text(
-                  addLabel.toUpperCase(),
+                  latin ? addLabel.toUpperCase() : addLabel,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    letterSpacing: 0.05 * 12,
+                    letterSpacing: latin ? 0.05 * 12 : 0,
                     color: theme.scaffoldBackgroundColor,
                   ),
                 ),
@@ -97,7 +98,7 @@ class QtyStepper extends ConsumerWidget {
   }
 }
 
-class _StepBtn extends ConsumerWidget {
+class _StepBtn extends StatelessWidget {
   const _StepBtn({
     required this.icon,
     required this.onTap,
@@ -111,7 +112,7 @@ class _StepBtn extends ConsumerWidget {
   final bool splash;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
       color: Colors.transparent,

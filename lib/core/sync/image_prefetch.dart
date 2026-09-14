@@ -24,11 +24,6 @@ class ImagePrefetch {
     return dir;
   }
 
-  Future<File?> pinnedFile(String name) async {
-    final f = File(p.join((await _dir).path, name));
-    return await f.exists() ? f : null;
-  }
-
   /// First existing pinned brand file (`logo`/`cover`, any extension).
   Future<File?> pinnedBrand(String base) async {
     for (final e in ['png', 'jpg', 'jpeg', 'webp']) {

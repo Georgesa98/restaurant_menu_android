@@ -20,7 +20,11 @@ class TenantThemeMapper {
 
   static double parsePx(String raw, double fallback) {
     final cleaned = raw.trim().toLowerCase().replaceAll('px', '');
-    return double.tryParse(cleaned) ?? fallback;
+    final value = double.tryParse(cleaned) ?? fallback;
+    // A negative radius asserts in debug and clips in release — clamp it.
+    // Absurd values fall back instead of breaking layout.
+    if (value < 0 || value > 64) return fallback;
+    return value;
   }
 
   /// Web font names map to bundled families; anything else → [fallback].
@@ -32,7 +36,7 @@ class TenantThemeMapper {
     return fallback;
   }
 
-  static ThemeData toThemeData(TenantThemeTokens t, {bool dark = false}) {
+  static ThemeData toThemeData(TenantThemeTokens t) {
     const fb = TenantThemeTokens.defaults;
     final primary = parseHex(t.primaryColor, parseHex(fb.primaryColor, Colors.red));
     final secondary = parseHex(
@@ -57,7 +61,7 @@ class TenantThemeMapper {
     final cardElevated = t.cardStyle.toLowerCase() != 'outlined';
 
     final scheme = ColorScheme(
-      brightness: dark ? Brightness.dark : Brightness.light,
+      brightness: Brightness.light,
       primary: primary,
       onPrimary: Colors.white,
       secondary: secondary,

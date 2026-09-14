@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/i18n/locale_controller.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -9,32 +11,92 @@ class AuthState {
   const AuthState({
     this.status = AuthStatus.unknown,
     this.email,
-    this.tenantId,
     this.error,
     this.working = false,
   });
 
   final AuthStatus status;
   final String? email;
-  final String? tenantId;
   final String? error;
   final bool working;
 
   AuthState copyWith({
     AuthStatus? status,
     String? email,
-    String? tenantId,
     String? error,
     bool? working,
   }) {
     return AuthState(
       status: status ?? this.status,
       email: email ?? this.email,
-      tenantId: tenantId ?? this.tenantId,
       error: error,
       working: working ?? this.working,
     );
   }
+}
+
+/// better-auth email/password endpoint. Trailing slash is intentional:
+/// Next.js `trailingSlash: true` 308-redirects the slashless path, and
+/// dart:io won't auto-follow POST 308s — so we POST slashed directly.
+/// The server strips the slash before delegating to better-auth.
+const signInEmailPath = '/api/auth/sign-in/email/';
+
+/// Maps a failed `POST /api/auth/sign-in/email/` to a user-facing message.
+/// Pure (no ref) so it is unit-testable. Every branch stays distinct:
+/// credential rejections, unreachable server, unknown endpoint, validation,
+/// and server errors must never all read as "network error".
+/// [locale] `'ar'` renders Arabic; anything else renders English.
+String loginErrorMessage(DioException e, {String locale = 'en'}) {
+  final ar = locale == 'ar';
+  final code = e.response?.statusCode;
+  if (code == 401 || code == 403 || code == 400) {
+    return ar ? 'البريد أو كلمة المرور غير صحيحة' : 'Wrong email or password';
+  }
+  if (e.response == null) {
+    // No HTTP response at all: offline, DNS, refused, TLS, or timeout.
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return ar
+          ? 'الخادم يستغرق وقتًا طويلًا — حاول مجددًا وأنت متصل'
+          : 'Server is taking too long — try again online';
+    }
+    // A redirect that escaped the follow-interceptor (e.g. HTTPS→HTTP
+    // downgrade refused, hop limit, redirect loop): surface without a
+    // response body the same way, never as credentials.
+    if (e.type == DioExceptionType.badResponse &&
+        e.error is RedirectBlockedException) {
+      final blocked = e.error as RedirectBlockedException;
+      return ar
+          ? 'خدمة الدخول انتقلت بشكل غير متوقع (${blocked.statusCode}) — تحقق من الخادم ورابط API'
+          : 'Login service moved unexpectedly (${blocked.statusCode}) — check server/API URL';
+    }
+    return ar
+        ? 'تعذّر الوصول إلى الخادم — تحقق من الاتصال ورابط API'
+        : 'Cannot reach the server — check connection and API URL';
+  }
+  if (code == 301 ||
+      code == 302 ||
+      code == 303 ||
+      code == 307 ||
+      code == 308) {
+    return ar
+        ? 'خدمة الدخول انتقلت بشكل غير متوقع ($code) — تحقق من الخادم ورابط API'
+        : 'Login service moved unexpectedly ($code) — check server/API URL';
+  }
+  if (code == 404 || code == 405) {
+    return ar
+        ? 'خدمة الدخول غير موجودة ($code) — تحقق من الخادم ورابط API'
+        : 'Login service not found ($code) — check server and API URL';
+  }
+  if (code == 422) {
+    return ar
+        ? 'تم رفض الدخول ($code) — تحقق من صيغة البريد وحاول مجددًا'
+        : 'Login rejected ($code) — check the email format and try again';
+  }
+  return ar
+      ? 'خطأ في الخادم ($code) — حاول لاحقًا'
+      : 'Server error ($code) — try again later';
 }
 
 /// better-auth email/password against the Hono server. First login needs
@@ -54,6 +116,17 @@ class AuthController extends Notifier<AuthState> {
 
   ApiClient get _api => ref.read(apiClientProvider);
 
+  /// UI language for error strings. Falls back to English when the locale
+  /// provider is unavailable (e.g. a test scope without prefs) — a message
+  /// language must never crash a login attempt.
+  String _locale() {
+    try {
+      return ref.read(localeControllerProvider).languageCode;
+    } catch (_) {
+      return 'en';
+    }
+  }
+
   /// Validates the cached token, else drops to unauthenticated.
   Future<void> check() async {
     if (!ref.mounted) return;
@@ -68,7 +141,6 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         status: AuthStatus.authenticated,
         email: user['email'] as String?,
-        tenantId: user['tenantId'] as String?,
       );
     } on DioException catch (e) {
       if (!ref.mounted) return;
@@ -94,7 +166,7 @@ class AuthController extends Notifier<AuthState> {
   Future<bool> login(String email, String password) async {
     state = state.copyWith(working: true, error: null);
     try {
-      final res = await _api.post('/api/auth/sign-in/email', body: {
+      final res = await _api.post(signInEmailPath, body: {
         'email': email.trim(),
         'password': password,
       });
@@ -103,9 +175,10 @@ class AuthController extends Notifier<AuthState> {
           (data['session'] as Map?)?['token'] as String?;
       final user = _userOf(data);
       if (token == null || token.isEmpty || user == null) {
+        final ar = _locale() == 'ar';
         state = state.copyWith(
           working: false,
-          error: 'Unexpected login response',
+          error: ar ? 'استجابة دخول غير متوقعة' : 'Unexpected login response',
         );
         return false;
       }
@@ -116,16 +189,17 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState(
         status: AuthStatus.authenticated,
         email: user['email'] as String?,
-        tenantId: user['tenantId'] as String?,
       );
       return true;
     } on DioException catch (e) {
-      final code = e.response?.statusCode;
+      // Never logs credentials — type + status are enough to diagnose.
+      debugPrint(
+        'auth/login failed: type=${e.type} '
+        'status=${e.response?.statusCode} msg=${e.message}',
+      );
       state = state.copyWith(
         working: false,
-        error: code == 401 || code == 403 || code == 400
-            ? 'Wrong email or password'
-            : 'Network error — try again online',
+        error: loginErrorMessage(e, locale: _locale()),
       );
       return false;
     }
@@ -146,9 +220,10 @@ class AuthController extends Notifier<AuthState> {
   Future<void> forceRelogin() async {
     await _api.clearSession();
     ref.read(adminUnlockedProvider.notifier).lock();
+    final ar = _locale() == 'ar';
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
-      error: 'Session expired — please log in again',
+      error: ar ? 'انتهت الجلسة — سجّل الدخول مجددًا' : 'Session expired — please log in again',
     );
   }
 

@@ -17,8 +17,10 @@ final appDbProvider = Provider<AppDb>((ref) {
 final dbReadyProvider = FutureProvider<void>((ref) async {
   final db = ref.watch(appDbProvider);
   if (TenantConfig.current.slug != 'demo') return;
+  // Match by slug (not the `demo` id): after the first pull the server-uuid
+  // tenant replaces the seed row, and re-seeding would duplicate the menu.
   final existing = await (db.select(db.tenants)
-        ..where((t) => t.id.equals('demo')))
+        ..where((t) => t.slug.equals('demo')))
       .getSingleOrNull();
   if (existing == null) {
     await seedTenantFromAsset(
