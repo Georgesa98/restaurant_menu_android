@@ -33,7 +33,7 @@ void main() {
       expect((json['translations'] as List).single['name'], 'Grill');
     });
 
-    test('item splits dietary tags', () {
+    test('item carries variants, no tags field', () {
       final json = itemPushJson(
         MenuItem(
           id: 'i1',
@@ -45,7 +45,8 @@ void main() {
           imageUrl: null,
           isAvailable: true,
           displayOrder: 0,
-          dietaryTagsCsv: 'spicy|vegan',
+          isFeatured: true,
+          featuredUntil: '2026-09-20T20:59:59.000Z',
           updatedAt: 'x',
           isDeleted: false,
           dirty: true,
@@ -53,7 +54,9 @@ void main() {
         const [],
         const [],
       );
-      expect(json['dietaryTags'], ['spicy', 'vegan']);
+      expect(json.containsKey('dietaryTags'), isFalse);
+      expect(json['isFeatured'], isTrue);
+      expect(json['featuredUntil'], '2026-09-20T20:59:59.000Z');
       expect(json['variants'], isEmpty);
     });
   });
@@ -65,11 +68,13 @@ void main() {
         'categoryId': 'c1',
         'name': 'كفتة',
         'basePrice': '180.50',
-        'dietaryTags': ['spicy'],
+        'isFeatured': true,
+        'featuredUntil': '2026-09-20T20:59:59.000Z',
         'updatedAt': '2026-09-08T00:00:00.000Z',
       }, 't1');
       expect(item.basePrice.value, 180.5);
-      expect(item.dietaryTagsCsv.value, 'spicy');
+      expect(item.isFeatured.value, isTrue);
+      expect(item.featuredUntil.value, '2026-09-20T20:59:59.000Z');
       expect(item.dirty.value, false);
     });
 

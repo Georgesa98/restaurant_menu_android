@@ -112,7 +112,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('featured dishes show names and prices', (tester) async {
+  testWidgets('hero shows brand name only, no dish grid', (tester) async {
     final (db, prefs) = await _harness();
     await _seedDemo(db);
 
@@ -121,12 +121,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Kofta'), findsOneWidget);
-    expect(find.text('Shish Tawook'), findsOneWidget);
-    expect(find.text('SYP 120'), findsOneWidget);
-    expect(find.text('SYP 140'), findsOneWidget);
-    expect(find.text('Fire-grilled favorites'), findsOneWidget);
-    expect(find.textContaining('12 Main St'), findsOneWidget);
+    expect(find.text('Demo Restaurant'), findsOneWidget);
+    expect(find.text('Touch to browse'), findsOneWidget);
+    // Middle of the screen is typo-only: dishes, tagline, and contact stay
+    // in the kiosk menu, not on the idle hero — even when items exist.
+    expect(find.text('Kofta'), findsNothing);
+    expect(find.text('Shish Tawook'), findsNothing);
+    expect(find.text('SYP 120'), findsNothing);
+    expect(find.text('SYP 140'), findsNothing);
+    expect(find.text('Fire-grilled favorites'), findsNothing);
+    expect(find.textContaining('12 Main St'), findsNothing);
   });
 
   testWidgets('tap dismisses the overlay and pops the route', (tester) async {

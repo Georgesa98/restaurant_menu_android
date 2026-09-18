@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/tenant_config.dart';
 import '../db/db_provider.dart';
 import '../i18n/locale_controller.dart';
+import 'heartbeat.dart';
 import 'image_prefetch.dart';
 import 'sync_engine.dart';
 
@@ -87,9 +89,32 @@ class SyncScheduler {
           outcome.status == SyncStatus.fullRepulled) {
         await _postPullMedia();
       }
+      // Liveness + catch-up (PLAN §31): the server may have moved between
+      // our push and pull. Best-effort — never fails the cycle.
+      await _heartbeatCatchUp();
       return outcome;
     } finally {
       _busy = false;
+    }
+  }
+
+  /// Sends the heartbeat with our just-pulled revision; when the server
+  /// reports a newer revision, performs one more delta pull. No loop: a
+  /// single catch-up is enough per cycle (the next 15-min tick covers races).
+  Future<void> _heartbeatCatchUp() async {
+    try {
+      final db = _ref.read(appDbProvider);
+      final known = await localRevision(db, TenantConfig.current.slug);
+      final hb = await sendHeartbeat(_ref, knownRevision: known);
+      if (hb == null || hb.revision <= known) return;
+      final outcome = await _ref.read(syncEngineProvider).pull();
+      _ref.read(lastSyncProvider.notifier).set(outcome);
+      if (outcome.status == SyncStatus.ok ||
+          outcome.status == SyncStatus.fullRepulled) {
+        await _postPullMedia();
+      }
+    } catch (_) {
+      // Heartbeat never fails sync.
     }
   }
 

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/db/db_provider.dart';
 import '../../core/i18n/locale_controller.dart';
 import '../../core/sync/sync_engine.dart';
 import '../../core/sync/sync_scheduler.dart';
 import '../../features/menu/menu_tenant_id.dart';
+import '../../features/menu/tenant_provider.dart';
 import '../kiosk/screensaver_controller.dart';
 import 'auth/admin_auth.dart';
+import 'items_admin_page.dart' show itemsMissingPhotoOnlyProvider;
 
 /// Admin hub: sections, sync status + manual push, locale, logout.
 class AdminPage extends ConsumerWidget {
@@ -61,6 +64,7 @@ class AdminPage extends ConsumerWidget {
             title: ar ? 'أصناف القائمة' : 'Menu items',
             onTap: () => context.go('/admin/items'),
           ),
+          const _PhotoScoreCard(),
           const Divider(height: 32),
           FilledButton.icon(
             onPressed: snapshot?.running == true
@@ -76,6 +80,8 @@ class AdminPage extends ConsumerWidget {
             _statusLine(snapshot, ar),
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 4),
+          const _RevisionLine(),
           const SizedBox(height: 4),
           Text(
             // Queried tenant id (server uuid post-pull): makes menu/admin
@@ -148,6 +154,78 @@ class _ScreensaverToggleState extends ConsumerState<_ScreensaverToggle> {
         await ref.read(screensaverProvider.notifier).setEnabled(v);
         setState(() => _value = v);
       },
+    );
+  }
+}
+
+/// Photo completeness card: missing/total over the tenant's items.
+/// Tapping arms the items-page photo filter and routes there.
+class _PhotoScoreCard extends ConsumerWidget {
+  const _PhotoScoreCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
+    final tid = ref.watch(menuTenantIdProvider);
+    if (tid.isEmpty) return const SizedBox.shrink();
+    return FutureBuilder<(int, int)>(
+      future: ref.watch(appDbProvider).photoScore(tid),
+      builder: (context, snap) {
+        final score = snap.data;
+        if (score == null) return const SizedBox.shrink();
+        final (missing, total) = score;
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.photo_outlined),
+            title: Text(ar
+                ? '$missing من $total بدون صور'
+                : '$missing of $total missing photos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              ref.read(itemsMissingPhotoOnlyProvider.notifier).set(true);
+              context.go('/admin/items');
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Menu revision + poll flag (PLAN §31): `rev N` with an amber dot while
+/// the server wants this tablet to refresh (super-admin request-sync).
+class _RevisionLine extends ConsumerWidget {
+  const _RevisionLine();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
+    final row = ref.watch(tenantRowProvider).value;
+    if (row == null) return const SizedBox.shrink();
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: row.syncRequired ? Colors.amber : Colors.green,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            row.syncRequired
+                ? (ar
+                    ? 'تحديث متوفر (rev ${row.revision}) — اضغط مزامنة الآن'
+                    : 'Update available (rev ${row.revision}) — tap Sync now')
+                : (ar
+                    ? 'القائمة محدثة (rev ${row.revision})'
+                    : 'Menu current (rev ${row.revision})'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
     );
   }
 }

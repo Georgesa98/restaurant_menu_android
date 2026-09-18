@@ -48,8 +48,19 @@ String? _enName(List<MenuItemTranslation> trs, String itemId) {
   return null;
 }
 
+/// When true, the items list shows only dishes without a photo (armed by the
+/// admin-hub photo score card; togglable via the filter chip on the page).
+class _PhotoFilter extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool v) => state = v;
+}
+
+final itemsMissingPhotoOnlyProvider =
+    NotifierProvider<_PhotoFilter, bool>(_PhotoFilter.new);
+
 /// Items CRUD per category: availability toggle, reorder, AR+EN dialog with
-/// variants editor, tags, and dish-photo upload.
+/// variants editor and dish-photo upload.
 class ItemsAdminPage extends ConsumerStatefulWidget {
   const ItemsAdminPage({super.key});
 
@@ -72,6 +83,12 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
     final trs = ref.watch(_itemTranslationsProvider).value ?? [];
     final vars = ref.watch(_variantsProvider).value ?? [];
     final ar = ref.watch(localeControllerProvider).languageCode == 'ar';
+    final missingOnly = ref.watch(itemsMissingPhotoOnlyProvider);
+    final visible = missingOnly
+        ? items
+            .where((i) => i.imageUrl?.trim().isNotEmpty != true)
+            .toList()
+        : items;
 
     return Scaffold(
       appBar: AppBar(title: Text(ar ? 'أصناف القائمة' : 'Menu items')),
@@ -100,16 +117,48 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                 onChanged: (v) => setState(() => _categoryId = v),
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FilterChip(
+                label: Text(ar ? 'بدون صور' : 'No photo'),
+                selected: missingOnly,
+                onSelected: (v) => ref
+                    .read(itemsMissingPhotoOnlyProvider.notifier)
+                    .set(v),
+              ),
+            ),
+          ),
           Expanded(
-            child: items.isEmpty
+            child: visible.isEmpty
                 ? Center(
-                    child: Text(
-                        ar ? 'لا أطباق — أضف واحدًا' : 'No items — add one'))
-                : ReorderableListView.builder(
+                    child: Text(missingOnly
+                        ? (ar ? 'كل الأطباق لها صور' : 'Every dish has a photo')
+                        : (ar
+                            ? 'لا أطباق — أضف واحدًا'
+                            : 'No items — add one')))
+                : missingOnly
+                    ? ListView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: visible.length,
+                        // Plain list: reordering a filtered subset is meaningless.
+                        itemBuilder: (_, i) => _itemTile(
+                          context,
+                          ref,
+                          visible[i],
+                          ar,
+                          trs,
+                          vars,
+                          effectiveCat!,
+                          draggable: false,
+                        ),
+                      )
+                    : ReorderableListView.builder(
                     padding: const EdgeInsets.all(8),
-                    itemCount: items.length,
+                    itemCount: visible.length,
                     onReorderItem: (oldI, newI) async {
-                      final ordered = items.map((e) => e.id).toList();
+                      final ordered = visible.map((e) => e.id).toList();
                       final moved = ordered.removeAt(oldI);
                       ordered.insert(newI, moved);
                       await savePushAndToast(
@@ -118,54 +167,72 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                         () => ref.read(adminWritesProvider).reorderItems(ordered),
                       );
                     },
-                    itemBuilder: (_, i) {
-                      final item = items[i];
-                      final vcount =
-                          vars.where((v) => v.menuItemId == item.id).length;
-                      return ListTile(
-                        key: ValueKey(item.id),
-                        title: Text(item.name),
-                        subtitle: Text(
-                          [
-                            if ((_enName(trs, item.id)) != null) _enName(trs, item.id)!,
-                            if (vcount > 0)
-                              (ar ? '$vcount خيارات' : '$vcount variants'),
-                            if (item.basePrice != null)
-                              formatPrice(item.basePrice),
-                          ].join(' • '),
-                        ),
-                        leading: const Icon(Icons.drag_handle),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch(
-                              value: item.isAvailable,
-                              onChanged: (v) => savePushAndToast(
-                                ref,
-                                context,
-                                () => ref
-                                    .read(adminWritesProvider)
-                                    .setItemAvailable(item.id, v),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _openDialog(
-                                context,
-                                ref,
-                                effectiveCat!,
-                                existing: item,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () => _confirmDelete(context, ref, item),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    itemBuilder: (_, i) => _itemTile(
+                      context,
+                      ref,
+                      visible[i],
+                      ar,
+                      trs,
+                      vars,
+                      effectiveCat!,
+                      draggable: true,
+                    ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _itemTile(
+    BuildContext context,
+    WidgetRef ref,
+    MenuItem item,
+    bool ar,
+    List<MenuItemTranslation> trs,
+    List<MenuItemVariant> vars,
+    String effectiveCat, {
+    required bool draggable,
+  }) {
+    final vcount = vars.where((v) => v.menuItemId == item.id).length;
+    final live = isLiveFeatured(
+      isFeatured: item.isFeatured,
+      featuredUntil: item.featuredUntil,
+    );
+    return ListTile(
+      key: ValueKey(item.id),
+      title: Text('${live ? '★ ' : ''}${item.name}'),
+      subtitle: Text(
+        [
+          if ((_enName(trs, item.id)) != null) _enName(trs, item.id)!,
+          if (vcount > 0) (ar ? '$vcount خيارات' : '$vcount variants'),
+          if (item.basePrice != null) formatPrice(item.basePrice),
+        ].join(' • '),
+      ),
+      leading: Icon(draggable ? Icons.drag_handle : Icons.image_not_supported_outlined),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Switch(
+            value: item.isAvailable,
+            onChanged: (v) => savePushAndToast(
+              ref,
+              context,
+              () => ref.read(adminWritesProvider).setItemAvailable(item.id, v),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _openDialog(
+              context,
+              ref,
+              effectiveCat,
+              existing: item,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _confirmDelete(context, ref, item),
           ),
         ],
       ),
@@ -220,9 +287,6 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
     final price = TextEditingController(
       text: existing?.basePrice?.toString() ?? '',
     );
-    final tags = TextEditingController(
-      text: (existing?.dietaryTagsCsv ?? '').split('|').where((t) => t.isNotEmpty).join(', '),
-    );
     final imageUrl = TextEditingController(text: existing?.imageUrl ?? '');
     final variantRows = <_VariantRow>[
       for (final v in vars.where((v) => v.menuItemId == existing?.id))
@@ -233,6 +297,11 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
         ),
     ];
     var available = existing?.isAvailable ?? true;
+    var featured = existing?.isFeatured ?? false;
+    final featuredUntil = TextEditingController(
+      text: existing?.featuredUntil?.split('T').first ?? '',
+    );
+    String? pinError;
     var uploading = false;
 
     Future<void> pickAndUpload(StateSetter setState) async {
@@ -313,15 +382,6 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: tags,
-                    decoration: InputDecoration(
-                      labelText:
-                          ar ? 'الوسوم (مفصولة بفواصل)' : 'Tags (comma separated)',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
@@ -352,6 +412,27 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
                     value: available,
                     onChanged: (v) => setState(() => available = v),
                   ),
+                  SwitchListTile(
+                    title: Text(ar ? 'مثبت في الأعلى' : 'Pinned to top'),
+                    value: featured,
+                    onChanged: (v) => setState(() => featured = v),
+                  ),
+                  if (featured)
+                    TextField(
+                      controller: featuredUntil,
+                      keyboardType: TextInputType.datetime,
+                      decoration: InputDecoration(
+                        labelText: ar
+                            ? 'التثبيت حتى (YYYY-MM-DD، فارغ = دائم)'
+                            : 'Pin until (YYYY-MM-DD, blank = forever)',
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        errorText: pinError,
+                      ),
+                      onChanged: (_) {
+                        if (pinError != null) setState(() => pinError = null);
+                      },
+                    ),
                   const Divider(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -384,8 +465,19 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
               child: Text(ar ? 'إلغاء' : 'Cancel'),
             ),
             FilledButton(
-              onPressed:
-                  name.text.trim().isEmpty ? null : () => Navigator.pop(ctx, true),
+              onPressed: name.text.trim().isEmpty
+                  ? null
+                  : () {
+                      if (featured &&
+                          featuredUntil.text.trim().isNotEmpty &&
+                          _parsePinUntil(featuredUntil.text) == null) {
+                        setState(() => pinError = ar
+                            ? 'التاريخ غير صالح — استخدم YYYY-MM-DD أو اتركه فارغًا'
+                            : 'Invalid date — use YYYY-MM-DD or leave blank');
+                        return;
+                      }
+                      Navigator.pop(ctx, true);
+                    },
               child: Text(ar ? 'حفظ' : 'Save'),
             ),
           ],
@@ -408,11 +500,8 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
             imageUrl: imageUrl.text,
             isAvailable: available,
             displayOrder: existing?.displayOrder ?? 0,
-            dietaryTags: tags.text
-                .split(',')
-                .map((t) => t.trim())
-                .where((t) => t.isNotEmpty)
-                .toList(),
+            isFeatured: featured,
+            featuredUntil: _parsePinUntil(featuredUntil.text),
             enName: enName.text,
             variants: [
               for (final r in variantRows)
@@ -426,6 +515,16 @@ class _ItemsAdminPageState extends ConsumerState<ItemsAdminPage> {
           ),
     );
   }
+}
+
+/// Parses a `YYYY-MM-DD` pin expiry into a UTC end-of-day ISO string.
+/// Null when blank or unparseable (pin lasts until unpinned).
+String? _parsePinUntil(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return null;
+  final d = DateTime.tryParse(t);
+  if (d == null) return null;
+  return DateTime.utc(d.year, d.month, d.day, 23, 59, 59).toIso8601String();
 }
 
 class _VariantRow {

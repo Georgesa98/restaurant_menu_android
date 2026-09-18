@@ -63,4 +63,83 @@ void main() {
     });
   });
 
+  group('normalizeForSearch', () {
+    test('unifies alef forms and strips diacritics', () {
+      expect(normalizeForSearch('أحمد'), 'احمد');
+      expect(normalizeForSearch('كَفْتَة'), normalizeForSearch('كفته'));
+      expect(normalizeForSearch('  Kofta  '), 'kofta');
+    });
+  });
+
+  group('searchRank', () {
+    test('empty query matches neutrally', () {
+      expect(searchRank(query: '  ', names: ['Kofta'], descriptions: []), 1);
+    });
+
+    test('name prefix beats name contains beats description', () {
+      expect(
+        searchRank(query: 'kof', names: ['Kofta'], descriptions: ['grilled']),
+        0,
+      );
+      expect(
+        searchRank(query: 'ofta', names: ['Kofta'], descriptions: ['grilled']),
+        1,
+      );
+      expect(
+        searchRank(
+            query: 'grill', names: ['Kofta'], descriptions: ['Charcoal-grilled']),
+        2,
+      );
+    });
+
+    test('arabic forms cross-match, misses return null', () {
+      expect(searchRank(query: 'احمد', names: ['أحمد'], descriptions: []), 0);
+      expect(
+          searchRank(query: 'zzz', names: ['Kofta'], descriptions: []), isNull);
+    });
+  });
+
+  group('isLiveFeatured', () {
+    test('unpinned is never live', () {
+      expect(
+        isLiveFeatured(isFeatured: false, featuredUntil: null),
+        isFalse,
+      );
+    });
+
+    test('pin without expiry is live', () {
+      expect(
+        isLiveFeatured(isFeatured: true, featuredUntil: null),
+        isTrue,
+      );
+    });
+
+    test('expiry window is honored', () {
+      final now = DateTime.utc(2026, 9, 14, 12);
+      expect(
+        isLiveFeatured(
+          isFeatured: true,
+          featuredUntil: '2026-09-20T20:59:59.000Z',
+          now: now,
+        ),
+        isTrue,
+      );
+      expect(
+        isLiveFeatured(
+          isFeatured: true,
+          featuredUntil: '2026-09-10T20:59:59.000Z',
+          now: now,
+        ),
+        isFalse,
+      );
+      expect(
+        isLiveFeatured(
+          isFeatured: true,
+          featuredUntil: 'not-a-date',
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+  });
 }

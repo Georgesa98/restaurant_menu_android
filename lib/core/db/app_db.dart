@@ -46,6 +46,9 @@ class Tenants extends Table {
   TextColumn get availableLocalesCsv =>
       text().withDefault(const Constant('ar,en'))();
   TextColumn get lastSyncAt => text().nullable()();
+  // Sync coordination (server Tenant.revision + poll flag, PLAN §31).
+  IntColumn get revision => integer().withDefault(const Constant(0))();
+  BoolColumn get syncRequired => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -88,7 +91,9 @@ class MenuItems extends Table {
   TextColumn get imageUrl => text().nullable()();
   BoolColumn get isAvailable => boolean().withDefault(const Constant(true))();
   IntColumn get displayOrder => integer().withDefault(const Constant(0))();
-  TextColumn get dietaryTagsCsv => text().withDefault(const Constant(''))();
+  // Owner pin: sorts first on the kiosk while live (see isLiveFeatured).
+  BoolColumn get isFeatured => boolean().withDefault(const Constant(false))();
+  TextColumn get featuredUntil => text().nullable()();
   TextColumn get updatedAt => text()();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get dirty => boolean().withDefault(const Constant(false))();
@@ -165,7 +170,37 @@ class AppDb extends _$AppDb {
   AppDb.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 4;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          // v2: dietary tags removed per owner (2026-09-14) — useless field.
+          if (from < 2) {
+            await customStatement(
+              'ALTER TABLE menu_items DROP COLUMN dietary_tags_csv',
+            );
+          }
+          // v3: featured pins (owner merchandising).
+          if (from < 3) {
+            await customStatement(
+              'ALTER TABLE menu_items ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0',
+            );
+            await customStatement(
+              'ALTER TABLE menu_items ADD COLUMN featured_until TEXT',
+            );
+          }
+          // v4: menu revision + poll flag (heartbeat, PLAN §31).
+          if (from < 4) {
+            await customStatement(
+              'ALTER TABLE tenants ADD COLUMN revision INTEGER NOT NULL DEFAULT 0',
+            );
+            await customStatement(
+              'ALTER TABLE tenants ADD COLUMN sync_required INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+        },
+      );
 
   static LazyDatabase _open() {
     // sqlite3 v3+ ships its own Android libs; no workaround package needed.
@@ -224,6 +259,19 @@ class AppDb extends _$AppDb {
         .watch();
   }
 
+  /// Global kiosk search: all visible items of a tenant across categories.
+  Stream<List<MenuItem>> watchTenantItems(String tenantId) {
+    return (select(menuItems)
+          ..where(
+            (i) =>
+                i.tenantId.equals(tenantId) &
+                i.isAvailable.equals(true) &
+                i.isDeleted.equals(false),
+          )
+          ..orderBy([(i) => OrderingTerm.asc(i.displayOrder), (i) => OrderingTerm.asc(i.name)]))
+        .watch();
+  }
+
   Stream<List<CategoryTranslation>> watchCategoryTranslations() {
     return select(categoryTranslations).watch();
   }
@@ -239,18 +287,17 @@ class AppDb extends _$AppDb {
         .watch();
   }
 
-  /// Attract loop: first N available items of the tenant.
-  Future<List<MenuItem>> topItemsWithImages(String tenantId, int limit) {
-    return (select(menuItems)
+  /// Photo completeness: (missing, total) over non-deleted items of [tenantId].
+  Future<(int, int)> photoScore(String tenantId) async {
+    final rows = await (select(menuItems)
           ..where(
             (i) =>
-                i.tenantId.equals(tenantId) &
-                i.isAvailable.equals(true) &
-                i.isDeleted.equals(false),
-          )
-          ..orderBy([(i) => OrderingTerm.asc(i.displayOrder)])
-          ..limit(limit))
+                i.tenantId.equals(tenantId) & i.isDeleted.equals(false),
+          ))
         .get();
+    final missing =
+        rows.where((i) => i.imageUrl?.trim().isNotEmpty != true).length;
+    return (missing, rows.length);
   }
 
   /// Single tenant row by slug (one row per APK). Null until first pull.

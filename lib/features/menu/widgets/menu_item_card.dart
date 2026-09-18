@@ -10,7 +10,7 @@ import '../order_state.dart';
 import 'qty_stepper.dart';
 
 /// Web `.menu-card` anatomy: 4:3 photo on cream wash, 12/14/14 body, name +
-/// price row, 2-line desc, variant chips with prices, tag pills, stepper row.
+/// price row, 2-line desc, variant chips with prices, stepper row.
 class MenuItemCard extends ConsumerWidget {
   const MenuItemCard({super.key, required this.view, required this.categorySlug});
 
@@ -33,6 +33,10 @@ class MenuItemCard extends ConsumerWidget {
     );
     // Subscribe to this card's quantity only — other steppers don't rebuild us.
     final qty = ref.watch(quantitiesProvider.select((m) => m[qtyKey] ?? 0));
+    final live = isLiveFeatured(
+      isFeatured: view.item.isFeatured,
+      featuredUntil: view.item.featuredUntil,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -71,7 +75,7 @@ class MenuItemCard extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          view.name,
+                          '${live ? '★ ' : ''}${view.name}',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -135,35 +139,6 @@ class MenuItemCard extends ConsumerWidget {
                             onTap: () => ref
                                 .read(variantSelectionProvider.notifier)
                                 .select(view.item.id, i),
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (view.tags.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final t in view.tags)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.secondary,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              // Uppercasing + letterSpacing break Arabic
-                              // joining — Latin styling only.
-                              locale == 'ar' ? t : t.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: locale == 'ar' ? 0 : 0.08 * 10,
-                                color: theme.scaffoldBackgroundColor,
-                              ),
-                            ),
                           ),
                       ],
                     ),

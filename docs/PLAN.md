@@ -17,7 +17,9 @@ Current shell: `pubspec.yaml`, `lib/main.dart` (Hello World). Nothing to migrate
 - **Language:** user-toggleable AR (default) / EN, RTL when AR. `name`/`label` = canonical AR, EN in `*_translations`/`labelEn`. Numbers always Latin digits (`NumberFormat('en')`), never Arabic-Indic.
 - **Variants:** single-select pills, price updates on select, `basePrice` hidden when variants exist.
 - **Tenant bake:** `TENANT_SLUG` baked (readable, stable); resolve `Tenant.id` uuid on first pull.
-- **Dietary tags:** fixed enum (values TBD — proposal: `vegan, vegetarian, spicy, gluten_free, nuts`; AR labels in app).
+- **Dietary tags:** removed per owner 2026-09-14 (useless field). No enum,
+  no chips, no `dietaryTagsCsv` column (dropped in DB v2). Server should drop
+  the column too — see web handoff file.
 - **Fonts:** map web `headingFont/bodyFont` → bundled `Cairo` + `Inter`; ignore `customCss/shadow` v1.
 - **Layout:** web defaults confirmed — `menuLayout single` = list, `cardStyle elevated` = elevated cards, `spacing comfortable` = comfy padding.
 - **Images:** host already exists (details TBD — need base URL + max size). Compress client-side before upload.
@@ -309,7 +311,7 @@ Resolved:
 1. ~~Polling interval?~~ → 15 min silent + manual Sync button in admin + pull-on-boot.
 2. ~~Canonical language?~~ → AR canonical, EN in translations; user-toggleable, default AR; Latin digits always.
 3. ~~Variants UX?~~ → single-select pills; hide `basePrice` when variants exist.
-4. `dietaryTags` → fixed enum; values TBD (proposal: vegan, vegetarian, spicy, gluten_free, nuts + AR labels).
+4. ~~`dietaryTags` → fixed enum~~ → removed per owner 2026-09-14 (useless).
 5. ~~Fonts?~~ → Cairo/Inter mapping. `customCss` killed by policy (2026-09-07): web to drop column, app never reads it.
 6. ~~Layout meaning?~~ → confirmed: single = list, elevated = elevated cards, comfortable = comfy padding.
 7. ~~Bake slug vs id?~~ → bake `slug`, resolve uuid on first pull.
@@ -320,8 +322,6 @@ Resolved:
 Still needed from web repo:
 
 - better-auth session TTL + 401 shape.
-- `dietaryTags` final values.
-- Currency code/symbol per tenant (add to `Tenant`? or infer from locale?).
 - Slugify function to mirror on tablet.
 
 ## 15. Screensaver options (owner asked)
@@ -512,8 +512,9 @@ Customer menu renders from drift (demo seed; sync data drops in with P2 untouche
 
 - **Lockdown**: portrait-only, immersive-sticky, wakelock on at boot (PLAN §12);
   Android back blocked on the menu root (`PopScope`), admin keeps back.
-- **Attract loop** (`features/kiosk`): 3-min idle → fullscreen cover + pinned logo +
-  top photo dishes + touch-to-browse; any touch dismisses + re-arms; admin toggle
+- **Attract loop** (`features/kiosk`): 3-min idle → fullscreen cover +
+  big centered logo + big restaurant name only (hero, no dish grid) +
+  touch-to-browse pill (stays where it was); any touch dismisses + re-arms; admin toggle
   (persisted). Screensaver fires on the kiosk surface only (admin stays awake).
 - **Release**: `tool/build_tenant.sh <slug>` → `build/<slug>/app-release.apk`.
   Known limit: single `applicationId` across tenants (no flavors yet) — fine for
@@ -537,7 +538,8 @@ fixed brand neutrals, `customCss` still never read).
 - **Ordering**: `+ ADD` → qty stepper with accent splash, sticky primary counter bar
   (count + total), bottom-sheet order list with steppers/clear/total; quantities
   persisted per tenant (`menu-order:<slug>`); `itemId:variantId` key scheme.
-- **Currency**: `SYP 180` / `180 ل.س`, Latin digits always; unselected variants show
+- **Currency**: SYP-only, locked per owner 2026-09-14 (no per-tenant
+  currency column). `SYP 180` / `180 ل.س`, Latin digits always; unselected variants show
   `from`/`من` min.
 - **Tests**: currency/displayPrice units, card price-switch (mock prefs) — 34/34
   green, analyze clean.
@@ -629,3 +631,79 @@ product call or a schema migration (v2) and are listed as such.
   invalidate-on-pull); shared dish placeholder + SliverGrid virtualization;
   `SyncScheduler`/`uploadDishPhoto`/`TenantConfig` coverage; `save_and_push`
   fullRepulled message parity.
+
+## 28. Photo score (shipped 2026-09-18)
+
+- **DAO** (`app_db`): `photoScore(tenantId)` → `(missing, total)` over
+  non-deleted items (blank/whitespace `imageUrl` counts as missing).
+- **Hub card** (`admin_page`): `N of M missing photos` (AR/EN); tap arms the
+  items-page filter and routes to `/admin/items`.
+- **Filter** (`items_admin_page`): `itemsMissingPhotoOnlyProvider` + `No photo`
+  chip; filtered view is a plain list (reorder disabled — reordering a subset
+  is meaningless), empty state reads "Every dish has a photo".
+- **Web parity**: admin `items-view.tsx` already had stat + thumbnails +
+  `missingOnly` toggle (verified 2026-09-18 — no web change needed).
+- **Tests**: `test/photo_score_test.dart` — 93/93 green, analyze clean.
+
+## 29. Kiosk + admin search (shipped 2026-09-18)
+
+Same spec both sides (`menu_format.dart` ↔ web `lib/search.ts`): lowercase,
+strip Arabic diacritics (tashkeel), unify alef/hamza + waw/hamza + yaa/hamza +
+taa-marbuta; rank name-prefix (0) > name-contains (1) > description-contains
+(2), null = no match; blank query neutral.
+
+- **Android**: `normalizeForSearch` + `searchRank` (`menu_format.dart`),
+  `watchTenantItems` DAO + `MenuRepository`, `dishSearchQueryProvider` +
+  `searchResultsProvider` (rank, then live-pins first), home search field
+  swapping the landing for `SearchResultsSliver`, per-category box filtering
+  `MenuSection` via `query`.
+- **Web**: `lib/search.ts` + client filter in `order-menu.tsx` (unchanged).
+- **Tests**: `menu_format_test` (normalize/rank groups) + `menu_search_test`
+  (DAO/pin-order/widget filtering) — 93/93 green.
+
+## 30. Featured pins (shipped 2026-09-18)
+
+Owner merchandising: pin sorts first while live (`isFeatured && (featuredUntil
+== null || in future)`; bad dates never live). No cron — evaluated at render.
+
+- **Server** (web repo): `MenuItem.isFeatured + featuredUntil`
+  (migration `20260914195512_featured_slots`), `PATCH /api/items/:id/featured`,
+  CRUD/import/export/push carry both fields, admin pin button + dialog fields,
+  menu sorts live pins first via `isLiveFeatured`.
+- **Android (drift v3)**: `is_featured` + `featured_until` + migration;
+  `itemPushJson`/`parseServerItem` carry both (no `dietaryTags` key at all);
+  `admin_writes.saveItem` + dialog switch + `YYYY-MM-DD` expiry field with
+  inline invalid-date error; kiosk sorts live-first (`_featuredFirst` in
+  category views + global search); cards/admin rows show `★`; seed pins the
+  first two demo dishes (explicit, forever) for visual QA.
+- **Tests**: mapping (push/parse), `isLiveFeatured` windows, pin sort
+  (live-first, expired-with-rest) — 93/93 green, analyze clean.
+
+## 31. Heartbeat + revision (shipped 2026-09-18)
+
+Poll-flag "push" (no FCM in v1, per owner): every menu write bumps
+`Tenant.revision` and raises `syncRequired`; tablets compare cheaply and the
+super-admin sees the fleet.
+
+- **Server** (web repo): `Tenant.revision Int + syncRequired Boolean`,
+  `DeviceHeartbeat(tenantId, deviceId unique-per-tenant, lastSeen,
+  appVersion?, locale?)` (migration `20260918103849_heartbeat_revision`);
+  `lib/revision.ts::bumpTenantRevision` called by all menu writes (items,
+  categories, reorders, availability/featured, translations, import,
+  tablet push, tenant settings); `POST /api/devices/heartbeat/` (public:
+  upsert + `{serverTime, revision, syncRequired}`, auto-clears the flag when
+  `knownRevision >= revision`); `GET /api/tenants/:id/devices` + `POST|DELETE
+  /api/tenants/:id/request-sync` (super-admin); tenants table shows
+  `rev N` + pending dot + request-sync button; fleet panel lists devices
+  (stale >30 min greyed). Pull already ships the tenant row, so
+  `revision`/`syncRequired` ride along for free.
+- **Android (drift v4)**: `tenants.revision + sync_required` + migration;
+  `applyPull` persists both (old servers → 0/false); `heartbeat.dart`:
+  slashed path const (server `trailingSlash` 308s POSTs, same as login §21),
+  `tablet_device_id` minted once in prefs, `sendHeartbeat` best-effort with
+  `knownRevision`; scheduler heartbeats after every cycle and performs one
+  catch-up pull when `serverRevision > local`; admin hub shows `Menu current
+  (rev N)` green / `Update available (rev N) — tap Sync now` amber.
+- **Tests**: `test/heartbeat_test.dart` (result parsing/defaults, device-id
+  mint/persist, `localRevision`, pull persistence incl. old-server defaults,
+  slashed-path/body capture, offline-null) — 93/93 green, analyze clean.

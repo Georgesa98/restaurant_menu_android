@@ -63,7 +63,8 @@ Map<String, dynamic> itemPushJson(
     'imageUrl': i.imageUrl,
     'isAvailable': i.isAvailable,
     'displayOrder': i.displayOrder,
-    'dietaryTags': i.dietaryTagsCsv.split('|').where((t) => t.isNotEmpty).toList(),
+    'isFeatured': i.isFeatured,
+    'featuredUntil': i.featuredUntil,
     'translations': [
       for (final t in translations)
         {'locale': t.locale, 'name': t.name, 'description': t.description},
@@ -110,9 +111,8 @@ MenuItemsCompanion parseServerItem(
     imageUrl: Value(j['imageUrl'] as String?),
     isAvailable: Value((j['isAvailable'] as bool?) ?? true),
     displayOrder: Value((j['displayOrder'] as num?)?.toInt() ?? 0),
-    dietaryTagsCsv: Value(
-      ((j['dietaryTags'] as List?)?.cast<String>() ?? []).join('|'),
-    ),
+    isFeatured: Value((j['isFeatured'] as bool?) ?? false),
+    featuredUntil: Value(j['featuredUntil'] as String?),
     updatedAt: j['updatedAt'] as String? ?? _nowIso(),
     isDeleted: Value((j['isDeleted'] as bool?) ?? false),
     dirty: const Value(false),
@@ -281,6 +281,10 @@ class SyncEngine {
                 ((tenant['availableLocales'] as List?)?.cast<String>() ?? ['ar', 'en']).join(','),
               ),
               lastSyncAt: Value(serverTime),
+              // Menu revision + poll flag (PLAN §31): cheap staleness check
+              // for heartbeat; missing keys (old servers) mean revision 0.
+              revision: Value((tenant['revision'] as num?)?.toInt() ?? 0),
+              syncRequired: Value((tenant['syncRequired'] as bool?) ?? false),
             ),
             mode: InsertMode.insertOrReplace,
           );

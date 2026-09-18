@@ -94,11 +94,16 @@ Future<void> seedTenantFromAsset(
           );
     }
 
-    for (final j in items) {
+    for (var idx = 0; idx < items.length; idx++) {
+      final j = items[idx];
       final catId = categoryIds[j['categorySlug'] as String? ?? ''];
       if (catId == null) continue;
       final id = _uuid.v4();
       final variants = (j['variants'] as List? ?? []).cast<Map<String, dynamic>>();
+      // Demo pins: first two dishes pinned (forever) for kiosk QA.
+      // Real pins arrive via pull; seed contract is explicit, never default-relied.
+      final seedFeatured = (j['isFeatured'] as bool?) ?? idx < 2;
+      final seedUntil = j['featuredUntil'] as String?;
       await db.into(db.menuItems).insert(
             MenuItemsCompanion.insert(
               id: id,
@@ -113,9 +118,8 @@ Future<void> seedTenantFromAsset(
               ),
               isAvailable: Value((j['isAvailable'] as bool?) ?? true),
               displayOrder: Value((j['order'] as num?)?.toInt() ?? 0),
-              dietaryTagsCsv: Value(
-                ((j['dietaryTags'] as List?)?.cast<String>() ?? []).join('|'),
-              ),
+              isFeatured: Value(seedFeatured),
+              featuredUntil: Value(seedUntil),
               updatedAt: DateTime.now().toUtc().toIso8601String(),
             ),
           );

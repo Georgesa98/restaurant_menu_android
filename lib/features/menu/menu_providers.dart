@@ -25,9 +25,6 @@ class MenuItemView {
   final String name;
   final String? description;
   final List<MenuItemVariant> variants;
-
-  List<String> get tags =>
-      item.dietaryTagsCsv.split('|').where((t) => t.isNotEmpty).toList();
 }
 
 Stream<T> _ready<T>(Ref ref, Stream<T> Function(MenuRepository) pick) async* {
@@ -90,8 +87,24 @@ final menuItemViewsProvider =
   final items = ref.watch(_itemsStreamProvider(categoryId)).value ?? [];
   final trs = ref.watch(_itemTranslationsStreamProvider).value ?? [];
   final vars = ref.watch(_variantsStreamProvider).value ?? [];
-  return [for (final i in items) _toView(i, trs, vars, locale)];
+  final views = [for (final i in items) _toView(i, trs, vars, locale)];
+  views.sort((a, b) => _featuredFirst(a.item, b.item));
+  return views;
 });
+
+/// Kiosk order: live pins first, then display order.
+int _featuredFirst(MenuItem a, MenuItem b) {
+  final fa = isLiveFeatured(
+          isFeatured: a.isFeatured, featuredUntil: a.featuredUntil)
+      ? 0
+      : 1;
+  final fb = isLiveFeatured(
+          isFeatured: b.isFeatured, featuredUntil: b.featuredUntil)
+      ? 0
+      : 1;
+  final r = fa.compareTo(fb);
+  return r != 0 ? r : a.displayOrder.compareTo(b.displayOrder);
+}
 
 MenuItemView _toView(
   MenuItem i,
@@ -136,6 +149,49 @@ final categoryItemCountProvider =
     Provider.autoDispose.family<int, String>((ref, id) {
   final items = ref.watch(_itemsStreamProvider(id)).value ?? [];
   return items.length;
+});
+
+class _DishSearch extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String v) => state = v;
+}
+
+final dishSearchQueryProvider =
+    NotifierProvider<_DishSearch, String>(_DishSearch.new);
+
+final _tenantItemsStreamProvider =
+    StreamProvider.autoDispose.family<List<MenuItem>, String>(
+  (ref, tenantId) => _ready(ref, (r) => r.watchTenantItems(tenantId)),
+);
+
+/// Ranked global search across the tenant's categories (name prefix >
+/// name contains > description contains, then display order).
+final searchResultsProvider =
+    Provider.autoDispose<List<({MenuItemView view, int rank})>>((ref) {
+  final locale = ref.watch(localeControllerProvider).languageCode;
+  final tid = ref.watch(menuTenantIdProvider);
+  final q = ref.watch(dishSearchQueryProvider).trim();
+  if (tid.isEmpty || q.isEmpty) return [];
+  final items = ref.watch(_tenantItemsStreamProvider(tid)).value ?? [];
+  final trs = ref.watch(_itemTranslationsStreamProvider).value ?? [];
+  final vars = ref.watch(_variantsStreamProvider).value ?? [];
+  final ranked = <({MenuItemView view, int rank})>[];
+  for (final i in items) {
+    final v = _toView(i, trs, vars, locale);
+    final rank = searchRank(
+      query: q,
+      names: [i.name, v.name],
+      descriptions: [i.description, v.description],
+    );
+    if (rank != null) ranked.add((view: v, rank: rank));
+  }
+  ranked.sort((a, b) {
+    final r = a.rank.compareTo(b.rank);
+    if (r != 0) return r;
+    return _featuredFirst(a.view.item, b.view.item);
+  });
+  return ranked;
 });
 
 class _VariantSelection extends Notifier<Map<String, int>> {

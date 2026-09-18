@@ -3,21 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../../../core/theme/web_palette.dart';
+import '../menu_format.dart';
 import '../menu_providers.dart';
 import 'menu_item_card.dart';
 
 /// Web `.menu-category` section: italic serif header + hairline divider,
 /// then the item grid. Owns its item stream (safe for stacked All mode).
+/// When [query] is non-blank, only matching items render, ranked
+/// name-prefix > name-contains > description-contains.
 class MenuSection extends ConsumerWidget {
-  const MenuSection({super.key, required this.view});
+  const MenuSection({super.key, required this.view, this.query = ''});
 
   final CategoryView view;
+  final String query;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final views = ref.watch(menuItemViewsProvider(view.category.id));
+    final all = ref.watch(menuItemViewsProvider(view.category.id));
+    final q = query.trim();
+    final views = q.isEmpty
+        ? all
+        : [
+            for (final v in all)
+              if (searchRank(
+                    query: q,
+                    names: [v.item.name, v.name],
+                    descriptions: [v.item.description, v.description],
+                  ) !=
+                  null)
+                v,
+          ];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 48),
@@ -47,7 +64,11 @@ class MenuSection extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                locale == 'ar' ? 'لا أصناف متاحة' : 'No items available',
+                q.isEmpty
+                    ? (locale == 'ar' ? 'لا أصناف متاحة' : 'No items available')
+                    : (locale == 'ar'
+                        ? 'لا نتائج عن "$q"'
+                        : 'No results for "$q"'),
                 style: TextStyle(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
@@ -79,6 +100,63 @@ class MenuSection extends ConsumerWidget {
               },
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Global search results: ranked cards across categories (no section
+/// headers). Shown on the home landing while the search query is non-blank.
+class SearchResultsSliver extends ConsumerWidget {
+  const SearchResultsSliver({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final query = ref.watch(dishSearchQueryProvider).trim();
+    final results = ref.watch(searchResultsProvider);
+    final slugs = {
+      for (final c in ref.watch(categoryViewsProvider)) c.category.id: c.category.slug,
+    };
+    if (results.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Text(
+            locale == 'ar' ? 'لا نتائج عن "$query"' : 'No results for "$query"',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      sliver: SliverToBoxAdapter(
+        child: Builder(
+          builder: (context) {
+            final shortest = MediaQuery.sizeOf(context).shortestSide;
+            final cols = shortest >= 600 ? 2 : 1;
+            return MasonryGridView.count(
+              crossAxisCount: cols,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: results.length,
+              itemBuilder: (_, i) {
+                final v = results[i].view;
+                return MenuItemCard(
+                  view: v,
+                  categorySlug: slugs[v.item.categoryId] ?? '',
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

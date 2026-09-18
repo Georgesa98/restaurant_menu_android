@@ -350,6 +350,33 @@ class $TenantsTable extends Tenants with TableInfo<$TenantsTable, Tenant> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncRequiredMeta = const VerificationMeta(
+    'syncRequired',
+  );
+  @override
+  late final GeneratedColumn<bool> syncRequired = GeneratedColumn<bool>(
+    'sync_required',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sync_required" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -382,6 +409,8 @@ class $TenantsTable extends Tenants with TableInfo<$TenantsTable, Tenant> {
     defaultLocale,
     availableLocalesCsv,
     lastSyncAt,
+    revision,
+    syncRequired,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -617,6 +646,21 @@ class $TenantsTable extends Tenants with TableInfo<$TenantsTable, Tenant> {
         ),
       );
     }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('sync_required')) {
+      context.handle(
+        _syncRequiredMeta,
+        syncRequired.isAcceptableOrUnknown(
+          data['sync_required']!,
+          _syncRequiredMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -746,6 +790,14 @@ class $TenantsTable extends Tenants with TableInfo<$TenantsTable, Tenant> {
         DriftSqlType.string,
         data['${effectivePrefix}last_sync_at'],
       ),
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      syncRequired: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sync_required'],
+      )!,
     );
   }
 
@@ -786,6 +838,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
   final String defaultLocale;
   final String availableLocalesCsv;
   final String? lastSyncAt;
+  final int revision;
+  final bool syncRequired;
   const Tenant({
     required this.id,
     required this.name,
@@ -817,6 +871,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
     required this.defaultLocale,
     required this.availableLocalesCsv,
     this.lastSyncAt,
+    required this.revision,
+    required this.syncRequired,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -867,6 +923,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
     if (!nullToAbsent || lastSyncAt != null) {
       map['last_sync_at'] = Variable<String>(lastSyncAt);
     }
+    map['revision'] = Variable<int>(revision);
+    map['sync_required'] = Variable<bool>(syncRequired);
     return map;
   }
 
@@ -918,6 +976,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
       lastSyncAt: lastSyncAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncAt),
+      revision: Value(revision),
+      syncRequired: Value(syncRequired),
     );
   }
 
@@ -959,6 +1019,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
         json['availableLocalesCsv'],
       ),
       lastSyncAt: serializer.fromJson<String?>(json['lastSyncAt']),
+      revision: serializer.fromJson<int>(json['revision']),
+      syncRequired: serializer.fromJson<bool>(json['syncRequired']),
     );
   }
   @override
@@ -995,6 +1057,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
       'defaultLocale': serializer.toJson<String>(defaultLocale),
       'availableLocalesCsv': serializer.toJson<String>(availableLocalesCsv),
       'lastSyncAt': serializer.toJson<String?>(lastSyncAt),
+      'revision': serializer.toJson<int>(revision),
+      'syncRequired': serializer.toJson<bool>(syncRequired),
     };
   }
 
@@ -1029,6 +1093,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
     String? defaultLocale,
     String? availableLocalesCsv,
     Value<String?> lastSyncAt = const Value.absent(),
+    int? revision,
+    bool? syncRequired,
   }) => Tenant(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1060,6 +1126,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
     defaultLocale: defaultLocale ?? this.defaultLocale,
     availableLocalesCsv: availableLocalesCsv ?? this.availableLocalesCsv,
     lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+    revision: revision ?? this.revision,
+    syncRequired: syncRequired ?? this.syncRequired,
   );
   Tenant copyWithCompanion(TenantsCompanion data) {
     return Tenant(
@@ -1121,6 +1189,10 @@ class Tenant extends DataClass implements Insertable<Tenant> {
       lastSyncAt: data.lastSyncAt.present
           ? data.lastSyncAt.value
           : this.lastSyncAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      syncRequired: data.syncRequired.present
+          ? data.syncRequired.value
+          : this.syncRequired,
     );
   }
 
@@ -1156,7 +1228,9 @@ class Tenant extends DataClass implements Insertable<Tenant> {
           ..write('website: $website, ')
           ..write('defaultLocale: $defaultLocale, ')
           ..write('availableLocalesCsv: $availableLocalesCsv, ')
-          ..write('lastSyncAt: $lastSyncAt')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncRequired: $syncRequired')
           ..write(')'))
         .toString();
   }
@@ -1193,6 +1267,8 @@ class Tenant extends DataClass implements Insertable<Tenant> {
     defaultLocale,
     availableLocalesCsv,
     lastSyncAt,
+    revision,
+    syncRequired,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1227,7 +1303,9 @@ class Tenant extends DataClass implements Insertable<Tenant> {
           other.website == this.website &&
           other.defaultLocale == this.defaultLocale &&
           other.availableLocalesCsv == this.availableLocalesCsv &&
-          other.lastSyncAt == this.lastSyncAt);
+          other.lastSyncAt == this.lastSyncAt &&
+          other.revision == this.revision &&
+          other.syncRequired == this.syncRequired);
 }
 
 class TenantsCompanion extends UpdateCompanion<Tenant> {
@@ -1261,6 +1339,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
   final Value<String> defaultLocale;
   final Value<String> availableLocalesCsv;
   final Value<String?> lastSyncAt;
+  final Value<int> revision;
+  final Value<bool> syncRequired;
   final Value<int> rowid;
   const TenantsCompanion({
     this.id = const Value.absent(),
@@ -1293,6 +1373,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
     this.defaultLocale = const Value.absent(),
     this.availableLocalesCsv = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncRequired = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TenantsCompanion.insert({
@@ -1326,6 +1408,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
     this.defaultLocale = const Value.absent(),
     this.availableLocalesCsv = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncRequired = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1361,6 +1445,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
     Expression<String>? defaultLocale,
     Expression<String>? availableLocalesCsv,
     Expression<String>? lastSyncAt,
+    Expression<int>? revision,
+    Expression<bool>? syncRequired,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1395,6 +1481,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
       if (availableLocalesCsv != null)
         'available_locales_csv': availableLocalesCsv,
       if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (revision != null) 'revision': revision,
+      if (syncRequired != null) 'sync_required': syncRequired,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1430,6 +1518,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
     Value<String>? defaultLocale,
     Value<String>? availableLocalesCsv,
     Value<String?>? lastSyncAt,
+    Value<int>? revision,
+    Value<bool>? syncRequired,
     Value<int>? rowid,
   }) {
     return TenantsCompanion(
@@ -1463,6 +1553,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
       defaultLocale: defaultLocale ?? this.defaultLocale,
       availableLocalesCsv: availableLocalesCsv ?? this.availableLocalesCsv,
       lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      revision: revision ?? this.revision,
+      syncRequired: syncRequired ?? this.syncRequired,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1562,6 +1654,12 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
     if (lastSyncAt.present) {
       map['last_sync_at'] = Variable<String>(lastSyncAt.value);
     }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (syncRequired.present) {
+      map['sync_required'] = Variable<bool>(syncRequired.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1601,6 +1699,8 @@ class TenantsCompanion extends UpdateCompanion<Tenant> {
           ..write('defaultLocale: $defaultLocale, ')
           ..write('availableLocalesCsv: $availableLocalesCsv, ')
           ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncRequired: $syncRequired, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2699,17 +2799,31 @@ class $MenuItemsTable extends MenuItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _dietaryTagsCsvMeta = const VerificationMeta(
-    'dietaryTagsCsv',
+  static const VerificationMeta _isFeaturedMeta = const VerificationMeta(
+    'isFeatured',
   );
   @override
-  late final GeneratedColumn<String> dietaryTagsCsv = GeneratedColumn<String>(
-    'dietary_tags_csv',
+  late final GeneratedColumn<bool> isFeatured = GeneratedColumn<bool>(
+    'is_featured',
     aliasedName,
     false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_featured" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _featuredUntilMeta = const VerificationMeta(
+    'featuredUntil',
+  );
+  @override
+  late final GeneratedColumn<String> featuredUntil = GeneratedColumn<String>(
+    'featured_until',
+    aliasedName,
+    true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant(''),
   );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
@@ -2761,7 +2875,8 @@ class $MenuItemsTable extends MenuItems
     imageUrl,
     isAvailable,
     displayOrder,
-    dietaryTagsCsv,
+    isFeatured,
+    featuredUntil,
     updatedAt,
     isDeleted,
     dirty,
@@ -2846,12 +2961,18 @@ class $MenuItemsTable extends MenuItems
         ),
       );
     }
-    if (data.containsKey('dietary_tags_csv')) {
+    if (data.containsKey('is_featured')) {
       context.handle(
-        _dietaryTagsCsvMeta,
-        dietaryTagsCsv.isAcceptableOrUnknown(
-          data['dietary_tags_csv']!,
-          _dietaryTagsCsvMeta,
+        _isFeaturedMeta,
+        isFeatured.isAcceptableOrUnknown(data['is_featured']!, _isFeaturedMeta),
+      );
+    }
+    if (data.containsKey('featured_until')) {
+      context.handle(
+        _featuredUntilMeta,
+        featuredUntil.isAcceptableOrUnknown(
+          data['featured_until']!,
+          _featuredUntilMeta,
         ),
       );
     }
@@ -2920,10 +3041,14 @@ class $MenuItemsTable extends MenuItems
         DriftSqlType.int,
         data['${effectivePrefix}display_order'],
       )!,
-      dietaryTagsCsv: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dietary_tags_csv'],
+      isFeatured: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_featured'],
       )!,
+      featuredUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}featured_until'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}updated_at'],
@@ -2955,7 +3080,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
   final String? imageUrl;
   final bool isAvailable;
   final int displayOrder;
-  final String dietaryTagsCsv;
+  final bool isFeatured;
+  final String? featuredUntil;
   final String updatedAt;
   final bool isDeleted;
   final bool dirty;
@@ -2969,7 +3095,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
     this.imageUrl,
     required this.isAvailable,
     required this.displayOrder,
-    required this.dietaryTagsCsv,
+    required this.isFeatured,
+    this.featuredUntil,
     required this.updatedAt,
     required this.isDeleted,
     required this.dirty,
@@ -2992,7 +3119,10 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
     }
     map['is_available'] = Variable<bool>(isAvailable);
     map['display_order'] = Variable<int>(displayOrder);
-    map['dietary_tags_csv'] = Variable<String>(dietaryTagsCsv);
+    map['is_featured'] = Variable<bool>(isFeatured);
+    if (!nullToAbsent || featuredUntil != null) {
+      map['featured_until'] = Variable<String>(featuredUntil);
+    }
     map['updated_at'] = Variable<String>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['dirty'] = Variable<bool>(dirty);
@@ -3016,7 +3146,10 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
           : Value(imageUrl),
       isAvailable: Value(isAvailable),
       displayOrder: Value(displayOrder),
-      dietaryTagsCsv: Value(dietaryTagsCsv),
+      isFeatured: Value(isFeatured),
+      featuredUntil: featuredUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(featuredUntil),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       dirty: Value(dirty),
@@ -3038,7 +3171,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       isAvailable: serializer.fromJson<bool>(json['isAvailable']),
       displayOrder: serializer.fromJson<int>(json['displayOrder']),
-      dietaryTagsCsv: serializer.fromJson<String>(json['dietaryTagsCsv']),
+      isFeatured: serializer.fromJson<bool>(json['isFeatured']),
+      featuredUntil: serializer.fromJson<String?>(json['featuredUntil']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
@@ -3057,7 +3191,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'isAvailable': serializer.toJson<bool>(isAvailable),
       'displayOrder': serializer.toJson<int>(displayOrder),
-      'dietaryTagsCsv': serializer.toJson<String>(dietaryTagsCsv),
+      'isFeatured': serializer.toJson<bool>(isFeatured),
+      'featuredUntil': serializer.toJson<String?>(featuredUntil),
       'updatedAt': serializer.toJson<String>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
@@ -3074,7 +3209,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
     Value<String?> imageUrl = const Value.absent(),
     bool? isAvailable,
     int? displayOrder,
-    String? dietaryTagsCsv,
+    bool? isFeatured,
+    Value<String?> featuredUntil = const Value.absent(),
     String? updatedAt,
     bool? isDeleted,
     bool? dirty,
@@ -3088,7 +3224,10 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     isAvailable: isAvailable ?? this.isAvailable,
     displayOrder: displayOrder ?? this.displayOrder,
-    dietaryTagsCsv: dietaryTagsCsv ?? this.dietaryTagsCsv,
+    isFeatured: isFeatured ?? this.isFeatured,
+    featuredUntil: featuredUntil.present
+        ? featuredUntil.value
+        : this.featuredUntil,
     updatedAt: updatedAt ?? this.updatedAt,
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
@@ -3112,9 +3251,12 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
       displayOrder: data.displayOrder.present
           ? data.displayOrder.value
           : this.displayOrder,
-      dietaryTagsCsv: data.dietaryTagsCsv.present
-          ? data.dietaryTagsCsv.value
-          : this.dietaryTagsCsv,
+      isFeatured: data.isFeatured.present
+          ? data.isFeatured.value
+          : this.isFeatured,
+      featuredUntil: data.featuredUntil.present
+          ? data.featuredUntil.value
+          : this.featuredUntil,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
@@ -3133,7 +3275,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
           ..write('imageUrl: $imageUrl, ')
           ..write('isAvailable: $isAvailable, ')
           ..write('displayOrder: $displayOrder, ')
-          ..write('dietaryTagsCsv: $dietaryTagsCsv, ')
+          ..write('isFeatured: $isFeatured, ')
+          ..write('featuredUntil: $featuredUntil, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty')
@@ -3152,7 +3295,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
     imageUrl,
     isAvailable,
     displayOrder,
-    dietaryTagsCsv,
+    isFeatured,
+    featuredUntil,
     updatedAt,
     isDeleted,
     dirty,
@@ -3170,7 +3314,8 @@ class MenuItem extends DataClass implements Insertable<MenuItem> {
           other.imageUrl == this.imageUrl &&
           other.isAvailable == this.isAvailable &&
           other.displayOrder == this.displayOrder &&
-          other.dietaryTagsCsv == this.dietaryTagsCsv &&
+          other.isFeatured == this.isFeatured &&
+          other.featuredUntil == this.featuredUntil &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty);
@@ -3186,7 +3331,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
   final Value<String?> imageUrl;
   final Value<bool> isAvailable;
   final Value<int> displayOrder;
-  final Value<String> dietaryTagsCsv;
+  final Value<bool> isFeatured;
+  final Value<String?> featuredUntil;
   final Value<String> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> dirty;
@@ -3201,7 +3347,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
     this.imageUrl = const Value.absent(),
     this.isAvailable = const Value.absent(),
     this.displayOrder = const Value.absent(),
-    this.dietaryTagsCsv = const Value.absent(),
+    this.isFeatured = const Value.absent(),
+    this.featuredUntil = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
@@ -3217,7 +3364,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
     this.imageUrl = const Value.absent(),
     this.isAvailable = const Value.absent(),
     this.displayOrder = const Value.absent(),
-    this.dietaryTagsCsv = const Value.absent(),
+    this.isFeatured = const Value.absent(),
+    this.featuredUntil = const Value.absent(),
     required String updatedAt,
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
@@ -3237,7 +3385,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
     Expression<String>? imageUrl,
     Expression<bool>? isAvailable,
     Expression<int>? displayOrder,
-    Expression<String>? dietaryTagsCsv,
+    Expression<bool>? isFeatured,
+    Expression<String>? featuredUntil,
     Expression<String>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
@@ -3253,7 +3402,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
       if (imageUrl != null) 'image_url': imageUrl,
       if (isAvailable != null) 'is_available': isAvailable,
       if (displayOrder != null) 'display_order': displayOrder,
-      if (dietaryTagsCsv != null) 'dietary_tags_csv': dietaryTagsCsv,
+      if (isFeatured != null) 'is_featured': isFeatured,
+      if (featuredUntil != null) 'featured_until': featuredUntil,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
@@ -3271,7 +3421,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
     Value<String?>? imageUrl,
     Value<bool>? isAvailable,
     Value<int>? displayOrder,
-    Value<String>? dietaryTagsCsv,
+    Value<bool>? isFeatured,
+    Value<String?>? featuredUntil,
     Value<String>? updatedAt,
     Value<bool>? isDeleted,
     Value<bool>? dirty,
@@ -3287,7 +3438,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,
       displayOrder: displayOrder ?? this.displayOrder,
-      dietaryTagsCsv: dietaryTagsCsv ?? this.dietaryTagsCsv,
+      isFeatured: isFeatured ?? this.isFeatured,
+      featuredUntil: featuredUntil ?? this.featuredUntil,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
@@ -3325,8 +3477,11 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
     if (displayOrder.present) {
       map['display_order'] = Variable<int>(displayOrder.value);
     }
-    if (dietaryTagsCsv.present) {
-      map['dietary_tags_csv'] = Variable<String>(dietaryTagsCsv.value);
+    if (isFeatured.present) {
+      map['is_featured'] = Variable<bool>(isFeatured.value);
+    }
+    if (featuredUntil.present) {
+      map['featured_until'] = Variable<String>(featuredUntil.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<String>(updatedAt.value);
@@ -3355,7 +3510,8 @@ class MenuItemsCompanion extends UpdateCompanion<MenuItem> {
           ..write('imageUrl: $imageUrl, ')
           ..write('isAvailable: $isAvailable, ')
           ..write('displayOrder: $displayOrder, ')
-          ..write('dietaryTagsCsv: $dietaryTagsCsv, ')
+          ..write('isFeatured: $isFeatured, ')
+          ..write('featuredUntil: $featuredUntil, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
@@ -5093,6 +5249,8 @@ typedef $$TenantsTableCreateCompanionBuilder = TenantsCompanion Function({
   Value<String> defaultLocale,
   Value<String> availableLocalesCsv,
   Value<String?> lastSyncAt,
+  Value<int> revision,
+  Value<bool> syncRequired,
   Value<int> rowid,
 });
 typedef $$TenantsTableUpdateCompanionBuilder = TenantsCompanion Function({
@@ -5126,6 +5284,8 @@ typedef $$TenantsTableUpdateCompanionBuilder = TenantsCompanion Function({
   Value<String> defaultLocale,
   Value<String> availableLocalesCsv,
   Value<String?> lastSyncAt,
+  Value<int> revision,
+  Value<bool> syncRequired,
   Value<int> rowid,
 });
 
@@ -5284,6 +5444,16 @@ class $$TenantsTableFilterComposer extends Composer<_$AppDb, $TenantsTable> {
 
   ColumnFilters<String> get lastSyncAt => $composableBuilder(
     column: $table.lastSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get syncRequired => $composableBuilder(
+    column: $table.syncRequired,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5445,6 +5615,16 @@ class $$TenantsTableOrderingComposer extends Composer<_$AppDb, $TenantsTable> {
     column: $table.lastSyncAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get syncRequired => $composableBuilder(
+    column: $table.syncRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TenantsTableAnnotationComposer
@@ -5573,6 +5753,14 @@ class $$TenantsTableAnnotationComposer
     column: $table.lastSyncAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<bool> get syncRequired => $composableBuilder(
+    column: $table.syncRequired,
+    builder: (column) => column,
+  );
 }
 
 class $$TenantsTableTableManager
@@ -5633,6 +5821,8 @@ class $$TenantsTableTableManager
                 Value<String> defaultLocale = const Value.absent(),
                 Value<String> availableLocalesCsv = const Value.absent(),
                 Value<String?> lastSyncAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<bool> syncRequired = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TenantsCompanion(
                 id: id,
@@ -5665,6 +5855,8 @@ class $$TenantsTableTableManager
                 defaultLocale: defaultLocale,
                 availableLocalesCsv: availableLocalesCsv,
                 lastSyncAt: lastSyncAt,
+                revision: revision,
+                syncRequired: syncRequired,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5699,6 +5891,8 @@ class $$TenantsTableTableManager
                 Value<String> defaultLocale = const Value.absent(),
                 Value<String> availableLocalesCsv = const Value.absent(),
                 Value<String?> lastSyncAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<bool> syncRequired = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TenantsCompanion.insert(
                 id: id,
@@ -5731,6 +5925,8 @@ class $$TenantsTableTableManager
                 defaultLocale: defaultLocale,
                 availableLocalesCsv: availableLocalesCsv,
                 lastSyncAt: lastSyncAt,
+                revision: revision,
+                syncRequired: syncRequired,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6301,7 +6497,8 @@ typedef $$MenuItemsTableCreateCompanionBuilder = MenuItemsCompanion Function({
   Value<String?> imageUrl,
   Value<bool> isAvailable,
   Value<int> displayOrder,
-  Value<String> dietaryTagsCsv,
+  Value<bool> isFeatured,
+  Value<String?> featuredUntil,
   required String updatedAt,
   Value<bool> isDeleted,
   Value<bool> dirty,
@@ -6317,7 +6514,8 @@ typedef $$MenuItemsTableUpdateCompanionBuilder = MenuItemsCompanion Function({
   Value<String?> imageUrl,
   Value<bool> isAvailable,
   Value<int> displayOrder,
-  Value<String> dietaryTagsCsv,
+  Value<bool> isFeatured,
+  Value<String?> featuredUntil,
   Value<String> updatedAt,
   Value<bool> isDeleted,
   Value<bool> dirty,
@@ -6378,8 +6576,13 @@ class $$MenuItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get dietaryTagsCsv => $composableBuilder(
-    column: $table.dietaryTagsCsv,
+  ColumnFilters<bool> get isFeatured => $composableBuilder(
+    column: $table.isFeatured,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get featuredUntil => $composableBuilder(
+    column: $table.featuredUntil,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6453,8 +6656,13 @@ class $$MenuItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get dietaryTagsCsv => $composableBuilder(
-    column: $table.dietaryTagsCsv,
+  ColumnOrderings<bool> get isFeatured => $composableBuilder(
+    column: $table.isFeatured,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get featuredUntil => $composableBuilder(
+    column: $table.featuredUntil,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6518,8 +6726,13 @@ class $$MenuItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get dietaryTagsCsv => $composableBuilder(
-    column: $table.dietaryTagsCsv,
+  GeneratedColumn<bool> get isFeatured => $composableBuilder(
+    column: $table.isFeatured,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get featuredUntil => $composableBuilder(
+    column: $table.featuredUntil,
     builder: (column) => column,
   );
 
@@ -6570,7 +6783,8 @@ class $$MenuItemsTableTableManager
                 Value<String?> imageUrl = const Value.absent(),
                 Value<bool> isAvailable = const Value.absent(),
                 Value<int> displayOrder = const Value.absent(),
-                Value<String> dietaryTagsCsv = const Value.absent(),
+                Value<bool> isFeatured = const Value.absent(),
+                Value<String?> featuredUntil = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
@@ -6585,7 +6799,8 @@ class $$MenuItemsTableTableManager
                 imageUrl: imageUrl,
                 isAvailable: isAvailable,
                 displayOrder: displayOrder,
-                dietaryTagsCsv: dietaryTagsCsv,
+                isFeatured: isFeatured,
+                featuredUntil: featuredUntil,
                 updatedAt: updatedAt,
                 isDeleted: isDeleted,
                 dirty: dirty,
@@ -6602,7 +6817,8 @@ class $$MenuItemsTableTableManager
                 Value<String?> imageUrl = const Value.absent(),
                 Value<bool> isAvailable = const Value.absent(),
                 Value<int> displayOrder = const Value.absent(),
-                Value<String> dietaryTagsCsv = const Value.absent(),
+                Value<bool> isFeatured = const Value.absent(),
+                Value<String?> featuredUntil = const Value.absent(),
                 required String updatedAt,
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
@@ -6617,7 +6833,8 @@ class $$MenuItemsTableTableManager
                 imageUrl: imageUrl,
                 isAvailable: isAvailable,
                 displayOrder: displayOrder,
-                dietaryTagsCsv: dietaryTagsCsv,
+                isFeatured: isFeatured,
+                featuredUntil: featuredUntil,
                 updatedAt: updatedAt,
                 isDeleted: isDeleted,
                 dirty: dirty,

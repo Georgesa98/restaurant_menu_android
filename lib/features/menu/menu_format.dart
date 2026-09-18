@@ -1,7 +1,8 @@
 import 'package:intl/intl.dart';
 
 /// Pure, unit-tested menu helpers. Prices always use Latin digits
-/// (`NumberFormat('en')`); currency symbol arrives per-tenant in P2.
+/// (`NumberFormat('en')`); currency is SYP-only per owner (2026-09-14) —
+/// no per-tenant currency column.
 final _digits = NumberFormat.decimalPattern('en');
 
 String formatPrice(double? value) {
@@ -37,6 +38,20 @@ String displayPrice({
   return locale == 'ar' ? 'من $n ل.س' : 'from SYP $n';
 }
 
+/// Owner pin liveness: pinned while [featuredUntil] is null or in the
+/// future. Same spec as the web menu (`lib/search.ts isLiveFeatured`).
+bool isLiveFeatured({
+  required bool isFeatured,
+  required String? featuredUntil,
+  DateTime? now,
+}) {
+  if (!isFeatured) return false;
+  if (featuredUntil == null || featuredUntil.trim().isEmpty) return true;
+  final until = DateTime.tryParse(featuredUntil);
+  if (until == null) return false;
+  return until.isAfter(now ?? DateTime.now());
+}
+
 /// Resolve a display string: translation for [locale], else canonical fallback.
 String resolveLocalized({
   required String fallback,
@@ -45,4 +60,41 @@ String resolveLocalized({
   final t = translated?.trim();
   if (t != null && t.isNotEmpty) return t;
   return fallback;
+}
+
+/// Search normalization: lowercase, strip Arabic diacritics (tashkeel), and
+/// unify alef/hamza + waw/hamza + yaa/hamza + taa-marbuta forms so `أحمد`
+/// matches `احمد` and `كفته` matches `كفتة`. Same spec as the web menu.
+String normalizeForSearch(String s) {
+  var n = s.trim().toLowerCase();
+  n = n.replaceAll(RegExp('[\u064B-\u0652\u0670]'), '');
+  n = n.replaceAll(RegExp('[أإآٱ]'), 'ا');
+  n = n.replaceAll('ؤ', 'و').replaceAll('ئ', 'ي');
+  n = n.replaceAll('ة', 'ه');
+  n = n.replaceAll(RegExp(r'\s+'), ' ');
+  return n;
+}
+
+/// Rank a dish against [query]: 0 = name prefix, 1 = name contains,
+/// 2 = description contains, null = no match. Empty query matches all at
+/// rank 1 (neutral — callers keep display order).
+int? searchRank({
+  required String query,
+  required List<String?> names,
+  required List<String?> descriptions,
+}) {
+  final q = normalizeForSearch(query);
+  if (q.isEmpty) return 1;
+  final ns = [
+    for (final n in names)
+      if (n != null && n.trim().isNotEmpty) normalizeForSearch(n),
+  ];
+  if (ns.any((n) => n.startsWith(q))) return 0;
+  if (ns.any((n) => n.contains(q))) return 1;
+  final ds = [
+    for (final d in descriptions)
+      if (d != null && d.trim().isNotEmpty) normalizeForSearch(d),
+  ];
+  if (ds.any((d) => d.contains(q))) return 2;
+  return null;
 }

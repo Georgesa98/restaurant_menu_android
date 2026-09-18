@@ -22,6 +22,9 @@ class MenuRepository {
   Stream<List<MenuItem>> watchItems(String categoryId) =>
       _db.watchVisibleItems(categoryId);
 
+  Stream<List<MenuItem>> watchTenantItems(String tenantId) =>
+      _db.watchTenantItems(tenantId);
+
   Stream<List<CategoryTranslation>> watchCategoryTranslations() =>
       _db.watchCategoryTranslations();
 

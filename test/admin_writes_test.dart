@@ -92,8 +92,7 @@ void main() {
       expect(item.dirty, isTrue);
     });
 
-    test('availability toggle marks dirty', () async {
-      final cid = await writes.saveCategory(tenantId: 'demo', name: 'c');
+    test('availability toggle marks dirty', () async {      final cid = await writes.saveCategory(tenantId: 'demo', name: 'c');
       final iid = await writes.saveItem(tenantId: 'demo', categoryId: cid, name: 'k');
       // clear dirty to prove the toggle re-marks it
       await (db.update(db.menuItems)..where((i) => i.id.equals(iid)))
