@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/web_palette.dart';
 import '../menu_format.dart';
 import '../order_state.dart';
 import 'qty_stepper.dart';
@@ -37,6 +38,9 @@ class OrderSheet extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            _SheetNotice(locale: locale),
+            const SizedBox(height: 4),
             entriesAsync.when(
               loading: () => const Padding(
                 padding: EdgeInsets.all(24),
@@ -104,6 +108,51 @@ class OrderSheet extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Guest-list notice inside the order sheet: the list is not sent
+/// anywhere — guests show it to the staff.
+class _SheetNotice extends StatelessWidget {
+  const _SheetNotice({required this.locale});
+
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: const BoxDecoration(
+        color: WebPalette.noticeWash,
+        border: Border(
+          top: BorderSide(color: WebPalette.hairline, width: 0.5),
+          bottom: BorderSide(color: WebPalette.hairline, width: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long_outlined,
+              size: 14, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              locale == 'ar'
+                  ? 'قائمتك لا تصل إلى المطبخ — اعرضها على طاقمنا'
+                  : 'Your list is not sent to the kitchen — please show it to our staff',
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
       ),
     );
   }

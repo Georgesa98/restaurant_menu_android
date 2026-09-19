@@ -12,6 +12,9 @@ class WebPalette {
   /// Image placeholder wash behind dish photos.
   static const Color imageWash = Color(0xFFEDE7DB);
 
+  /// Viewing-notice pill wash (display-only menu banner).
+  static const Color noticeWash = Color(0xFFF6F1E7);
+
   /// Price text + order total (web `--accent-text: #9C7638`).
   static const Color accentText = Color(0xFF9C7638);
 

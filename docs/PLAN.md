@@ -707,3 +707,20 @@ super-admin sees the fleet.
 - **Tests**: `test/heartbeat_test.dart` (result parsing/defaults, device-id
   mint/persist, `localRevision`, pull persistence incl. old-server defaults,
   slashed-path/body capture, offline-null) — 93/93 green, analyze clean.
+
+## 32. Guest-list notice (shipped 2026-09-18)
+
+Owner policy: the in-app order list is a guest-side shortlist — it is NOT
+sent to the kitchen/bar. Guests build their list and show it to the staff,
+who take the order from the screen. Ordering UI stays fully working; the
+notice only corrects the "my tap fired the kitchen" assumption.
+
+- **Notice (two spots)**: `_ViewingNotice` pill in `MenuHero` (below
+  address/phone, above search) + `_SheetNotice` line at the top of
+  `OrderSheet`: receipt icon + `Your list is not sent to the kitchen —
+  please show it to our staff` / `قائمتك لا تصل إلى المطبخ — اعرضها على
+  طاقمنا`, cream wash (`noticeWash`), hairline border, theme-aware. Same
+  spec as web (`ViewingNotice` in `menu-hero.tsx` + `order-sheet-notice`
+  line, `menu.orderNotice` EN/AR).
+- **Tests**: `test/viewing_notice_test.dart` (notice AR+EN, ADD → stepper
+  still works) — 96/96 green, analyze clean.

@@ -99,6 +99,8 @@ class MenuHero extends ConsumerWidget {
                 textDirection: TextDirection.ltr,
               ),
           ],
+          const SizedBox(height: 12),
+          _ViewingNotice(locale: locale),
         ],
       ),
     );
@@ -108,6 +110,47 @@ class MenuHero extends ConsumerWidget {
         fontSize: 12,
         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
       );
+}
+
+/// Guest-list notice: the in-app list is not sent to the kitchen —
+/// guests show it to the staff.
+class _ViewingNotice extends StatelessWidget {
+  const _ViewingNotice({required this.locale});
+
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: WebPalette.noticeWash,
+        border: Border.all(color: WebPalette.hairline, width: 0.5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.receipt_long_outlined,
+              size: 14, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              locale == 'ar'
+                  ? 'قائمتك لا تصل إلى المطبخ — اعرضها على طاقمنا'
+                  : 'Your list is not sent to the kitchen — please show it to our staff',
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LocalePill extends ConsumerWidget {
